@@ -13,6 +13,7 @@ import yfinance as yf
 from pandas_datareader import data as pdr
 from IPython.display import display
 import requests
+yf.pdr_override()
 
 def show_more(df, lines):
     with pd.option_context("display.max_rows", lines):
@@ -23,7 +24,7 @@ def show_more(df, lines):
 ###### SET PARAMETERS ######
 today = dt.today().strftime('%Y-%m-%d')
 start_dt = "2015-01-01"
-period = "3mo" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
+period = "5y" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
 interval = "1d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 
 ###### DEFINE STOCKS ######
@@ -31,14 +32,14 @@ interval = "1d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 # NASDAQ 100, Goodrich Petroleum Corporation
 #stocks = 'BZ=F GOOG AAPL TSLA CL = F ^ GSPC PE OAS GC = F WTI NQ = F GDP'
 
-stocks = "BZ=F" # CL=F ^GSPC OAS GDP ^DJI NQ=F"
+stocks = "CL=F"  # CL=F ^GSPC OAS GDP ^DJI NQ=F"
 
 # GBP/USD, BTC/GBP, USD/JPY, EUR/GBP, ETH/USD
 # rates = 'GBPUSD=X CNY=X EURUSD=X'
-tickers = yf.Tickers(stocks)
-
+tickers = yf.Ticker(stocks)
+tickers.info
 ###### GET DATA #######
-Stocks = yf.download(stocks, start=start_dt, end=today, interval = interval)
+Stocks = yf.download(stocks, period=period, interval="1d")
 Stocks.columns
 Stocks
 # Rates = yf.download(rates, period = period, interval = interval)
