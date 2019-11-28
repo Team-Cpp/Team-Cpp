@@ -86,7 +86,7 @@ else:
     print("Downloading csv file...")
 
 if import_new_data == True:
-    url = 'https://datahub.io/core/oil-prices/r/brent-daily.csv'
+    url = 'https://datahub.io/core/oil-prices/r/wti-daily.csv'
     try:
         response = urllib.request.urlopen(url)
         print("Connection ok")
