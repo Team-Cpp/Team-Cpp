@@ -171,20 +171,57 @@ newframe = newframe.drop([0])
 newframe = newframe.rename(columns={"Dates": "Date"})
 newframe["Date"] = pd.to_datetime(newframe["Date"])
 
-test = proddata
-test["Date"] = pd.to_datetime(test.Date, format='%d/%m/%Y')
-test.set_index('Date').resample('B').ffill().reset_index()
+# test = proddata
+# test["Date"] = pd.to_datetime(test.Date, format='%d/%m/%Y')
+# test.set_index('Date').resample('B').ffill().reset_index()
 
 proddata = proddata.set_index('Date').resample('B').ffill().reset_index()
 
 combined = pd.merge(proddata, newframe, how='outer', on='Date')
 combined.columns
-nulls = combined[combined['Production of Crude Oil'].isnull()]
+
+nulls = combined[combined.isnull()]
 last_prod = combined['Production of Crude Oil'].last_valid_index()
 last_prod_val = combined['Production of Crude Oil'].iloc[last_prod]
 
-final_frame = combined.fillna(last_prod_val)
+oil = combined.pop("Production of Crude Oil")
+oil = oil.fillna(last_prod_val)
+
+combined["Production of Crude Oil"] = oil
+
+# p = np.asarray(final_frame["Prices"])
+# d = np.asarray(final_frame["Date"])
+
+# from datetime import date, timedelta
+# today = date.today()
+# gap = (today - date(2015, 1, 1)).days
+# from scipy.optimize import curve_fit
+# from scipy.interpolate import make_interp_spline, BSpline
+
+# x_new = [today - timedelta(days=x) for x in range(gap)]
+# spl = make_interp_spline(T, power, k=3)  # type: BSpline
+# power_smooth = spl(xnew)
+
+def plot2axis(x,y1,y2,x_name,y_name,y2_name):
+    plt.style.use("seaborn")
+    fig, ax = plt.subplots()
+    color = 'tab:green'
+    ax.set_xlabel(x_name, size=16)
+    ax.set_ylabel(y_name, size=16, color=color)
+    ax.plot(x, y1, lw=1, color=color)
+    ax.tick_params(axis='y', labelcolor=color)
+
+    ax2 = ax.twinx()
+    color = 'tab:blue'
+    # we already handled the x-label with ax
+    ax2.set_ylabel(y2_name, size=14, color=color)
+    ax2.plot(x, y2, color=color, lw=1.5,)
+    ax2.tick_params(axis='y', labelcolor=color)
+    fig.tight_layout()  
+    plt.show()
 
 
-
+plot2axis(combined["Date"], combined["Prices"].astype(
+    float), combined["Production of Crude Oil"], "Date","Price (USD)",
+          'Production of Crude Oil (Thousand Barrels per Day)')
 
