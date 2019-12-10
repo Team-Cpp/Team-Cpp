@@ -18,6 +18,36 @@ yf.pdr_override()
 def show_more(df, lines):
     with pd.option_context("display.max_rows", lines):
         display(df)
+        
+
+def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1 = False,\
+    lineax1y = 0, lineax1name = "lost", fill_boll = False, \
+    bol_low = 0, bol_high = 0, bol_name = "easy"):
+    plt.style.use("seaborn")
+    fig, ax = plt.subplots()
+    color = 'tab:green'
+    ax.set_xlabel(x_name, size=16)
+    ax.set_ylabel(y_name, size=16, color=color)
+    ax.plot(x, y1, lw=1, color=color, label = y_name)
+    ax.tick_params(axis='y', labelcolor=color)
+    if lineax1 == True:
+        ax.plot(x,lineax1y, label=lineax1name, linewidth =2, alpha =0.75, color="orange")
+    if fill_boll ==True:
+        ax.axhspan(bol_low, bol_high, color='blue', label=bol_name, alpha=0.75)
+
+    ax.legend(loc='upper left', prop={'size':16})
+    
+    
+    ax2 = ax.twinx()
+    color = 'tab:blue'
+    # we already handled the x-label with ax
+    ax2.set_ylabel(y2_name, size=14, color=color)
+    ax2.plot(x, y2, color=color, lw=1.5, label=y2_name)
+    ax2.tick_params(axis='y', labelcolor=color)
+    fig.tight_layout()
+    plt.show()
+    
+    
 # yf.pdr_override() #pandas datareader format
 
 """ YAHOO FINANCE SECTION START """
@@ -25,7 +55,7 @@ def show_more(df, lines):
 today = dt.today().strftime('%Y-%m-%d')
 start_dt = "2015-01-01"
 period = "5y" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
-interval = "1d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+interval = "5d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 
 ###### DEFINE STOCKS ######
 # Google, Apple, Tesla, Crude oil, S&P 500,Parsley Energy Inc.,Oasis Petroleum Inc., Gold, W&T Offshore Inc.,
@@ -39,9 +69,9 @@ stocks = "CL=F"  # CL=F ^GSPC OAS GDP ^DJI NQ=F"
 tickers = yf.Ticker(stocks)
 tickers.info
 ###### GET DATA #######
-Stocks = yf.download(stocks, period=period, interval="1d")
+Stocks = yf.download(stocks, period="max", interval="1d")
 Stocks.columns
-Stocks
+len(Stocks)
 # Rates = yf.download(rates, period = period, interval = interval)
 # show_more(Stocks, 300)
 
@@ -188,6 +218,8 @@ oil = combined.pop("Production of Crude Oil")
 oil = oil.fillna(last_prod_val)
 
 combined["Production of Crude Oil"] = oil
+combined["Prices"] = pd.to_numeric(combined["Prices"])
+
 
 # p = np.asarray(final_frame["Prices"])
 # d = np.asarray(final_frame["Date"])
@@ -202,26 +234,10 @@ combined["Production of Crude Oil"] = oil
 # spl = make_interp_spline(T, power, k=3)  # type: BSpline
 # power_smooth = spl(xnew)
 
-def plot2axis(x,y1,y2,x_name,y_name,y2_name):
-    plt.style.use("seaborn")
-    fig, ax = plt.subplots()
-    color = 'tab:green'
-    ax.set_xlabel(x_name, size=16)
-    ax.set_ylabel(y_name, size=16, color=color)
-    ax.plot(x, y1, lw=1, color=color)
-    ax.tick_params(axis='y', labelcolor=color)
-
-    ax2 = ax.twinx()
-    color = 'tab:blue'
-    # we already handled the x-label with ax
-    ax2.set_ylabel(y2_name, size=14, color=color)
-    ax2.plot(x, y2, color=color, lw=1.5,)
-    ax2.tick_params(axis='y', labelcolor=color)
-    fig.tight_layout()  
-    plt.show()
-
-
 plot2axis(combined["Date"], combined["Prices"].astype(
     float), combined["Production of Crude Oil"], "Date","Price (USD)",
           'Production of Crude Oil (Thousand Barrels per Day)')
+
+
+
 
