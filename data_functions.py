@@ -13,6 +13,7 @@ import yfinance as yf
 from pandas_datareader import data as pdr
 from IPython.display import display
 import requests
+import matplotlib.pyplot as plt
 yf.pdr_override()
 
 def show_more(df, lines):
@@ -22,7 +23,9 @@ def show_more(df, lines):
 
 def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1 = False,\
     lineax1y = 0, lineax1name = "lost", fill_boll = False, \
-    bol_low = 0, bol_high = 0, bol_name = "easy"):
+    bol_low = [], bol_high = [], bol_name = "easy"):
+    # import matplotlib.pyplot as plt
+    
     plt.style.use("seaborn")
     fig, ax = plt.subplots()
     color = 'tab:green'
@@ -31,9 +34,11 @@ def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1 = False,\
     ax.plot(x, y1, lw=1, color=color, label = y_name)
     ax.tick_params(axis='y', labelcolor=color)
     if lineax1 == True:
-        ax.plot(x,lineax1y, label=lineax1name, linewidth =2, alpha =0.75, color="orange")
-    if fill_boll ==True:
-        ax.axhspan(bol_low, bol_high, color='blue', label=bol_name, alpha=0.75)
+        ax.plot(x, lineax1y, label = lineax1name, linewidth = 2, alpha = 0.75, color = "orange")
+    if fill_boll == True:
+        # ax.axhspan(bol_low, bol_high, facecolor='blue', label=bol_name, alpha=0.75)
+        ax.fill_between(x, bol_high,
+                        bol_low, color='blue', alpha = 0.75)
 
     ax.legend(loc='upper left', prop={'size':16})
     
@@ -52,30 +57,31 @@ def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1 = False,\
 
 """ YAHOO FINANCE SECTION START """
 ###### SET PARAMETERS ######
-# def yFinData(period, interval, **stocks):
+def yFinData(period, interval, **stocks):
 
-# today = dt.today().strftime('%Y-%m-%d')
-# start_dt = "2015-01-01"
-# period = "5y" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
-# interval = "5d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+    today = dt.today().strftime('%Y-%m-%d')
+    start_dt = "2015-01-01"
+    period = "5y" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
+    interval = "5d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 
-# ###### DEFINE STOCKS ######
-# # Google, Apple, Tesla, Crude oil, S&P 500,Parsley Energy Inc.,Oasis Petroleum Inc., Gold, W&T Offshore Inc.,
-# # NASDAQ 100, Goodrich Petroleum Corporation
-# #stocks = 'BZ=F GOOG AAPL TSLA CL = F ^ GSPC PE OAS GC = F WTI NQ = F GDP'
+    ###### DEFINE STOCKS ######
+    # Google, Apple, Tesla, Crude oil, S&P 500,Parsley Energy Inc.,Oasis Petroleum Inc., Gold, W&T Offshore Inc.,
+    # NASDAQ 100, Goodrich Petroleum Corporation
+    # stocks = 'BZ=F GOOG AAPL TSLA CL = F ^ GSPC PE OAS GC = F WTI NQ = F GDP'
 
-# stocks = "CL=F"  # CL=F ^GSPC OAS GDP ^DJI NQ=F"
+    stocks = "CL=F"  # CL=F ^GSPC OAS GDP ^DJI NQ=F"
 
-# # GBP/USD, BTC/GBP, USD/JPY, EUR/GBP, ETH/USD
-# # rates = 'GBPUSD=X CNY=X EURUSD=X'
-# tickers = yf.Ticker(stocks)
-# tickers.info
-# ###### GET DATA #######
-# Stocks = yf.download(stocks, period="max", interval="1d")
-# Stocks.columns
-# len(Stocks)
-# Rates = yf.download(rates, period = period, interval = interval)
-# show_more(Stocks, 300)
+    # GBP/USD, BTC/GBP, USD/JPY, EUR/GBP, ETH/USD
+    # rates = 'GBPUSD=X CNY=X EURUSD=X'
+    tickers = yf.Ticker(stocks)
+    tickers.info
+    ###### GET DATA #######
+    Stocks = yf.download(stocks, period="max", interval="1wk")
+    Stocks.columns
+    # len(Stocks)
+    # Rates = yf.download(rates, period = period, interval = interval)
+    # show_more(Stocks, 300)
+    return Stocks
 
 """ YAHOO FINANCE SECTION END """
 
@@ -98,7 +104,7 @@ def oilProduction(url='https://www.eia.gov/dnav/pet/hist_xls/WCRFPUS2w.xls'):
 def dataHub(url, import_new_data = True, fname = "WTI_oil_prices.csv", error = False):
     #fname = 'WTI_oil_prices.csv'
     # import_new_data = False
-
+    today = dt.today().strftime('%Y-%m-%d')
     # error = False  # you can use this flag to tell the programme to basically skip everything else and go to the end so you don't get a crash when there's a problem
 
     #Allows the user to choose to use a previously downloaded datafile, or to download a new one. Mostly so I don't have to keep downloading the same datafile over and over again
