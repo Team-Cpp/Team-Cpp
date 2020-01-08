@@ -2,6 +2,12 @@ import requests
 import urllib.request
 import numpy as np
 import pandas as pd
+from sklearn.ensemble import GradientBoostingRegressor
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+from sklearn.metrics import mean_absolute_error
 
 #US Oil Production in 1000 barrels per day
 url2 = 'https://www.eia.gov/dnav/pet/hist_xls/WCRFPUS2w.xls'
