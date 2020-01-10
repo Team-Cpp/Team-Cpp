@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import data_functions as dataFun
 from sklearn.metrics import accuracy_score
 from sklearn.metrics import confusion_matrix
@@ -15,12 +14,11 @@ import math as m
 import numpy as np
 from datetime import datetime as dt
 import os
-import yfinance as yf
 from pandas_datareader import data as pdr
-from IPython.display import display
+#from IPython.display import display
 import requests
 import sys
-sys.path.insert(1, "/Users/qw19176/Documents/Courses/codingchallenge/")
+#sys.path.insert(1, "/Users/qw19176/Documents/Courses/codingchallenge/")
 
 priceDF = dataFun.dataHub(
     url="https://datahub.io/core/oil-prices/r/wti-daily.csv", import_new_data=True)
@@ -43,6 +41,10 @@ newPrice = float(input())
 
 print("Please enter the current WTI Oil Production Value")
 newProd = float(input())
+
+#print("Please enter the end date for Price data import (format yyyy-mm-dd)")
+#endDate = str(input())
+
 df = df.append({"Date": today, "Prices": newPrice,
                 "Production of Crude Oil": newProd}, ignore_index=True)
 df["Date"] = pd.to_datetime(df["Date"])

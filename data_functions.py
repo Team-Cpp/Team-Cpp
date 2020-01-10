@@ -9,16 +9,16 @@ import math as m
 import numpy as np
 from datetime import datetime as dt
 import os
-import yfinance as yf
+#import yfinance as yf
 from pandas_datareader import data as pdr
-from IPython.display import display
+#from IPython.display import display
 import requests
 import matplotlib.pyplot as plt
-yf.pdr_override()
+#yf.pdr_override()
 
-def show_more(df, lines):
-    with pd.option_context("display.max_rows", lines):
-        display(df)
+# def show_more(df, lines):
+#     with pd.option_context("display.max_rows", lines):
+#         display(df)
         
 
 def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1 = False,\
