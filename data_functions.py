@@ -10,10 +10,10 @@ import numpy as np
 from datetime import datetime as dt
 import os
 #import yfinance as yf
-from pandas_datareader import data as pdr
+#from pandas_datareader import data as pdr
 #from IPython.display import display
 import requests
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #yf.pdr_override()
 
 # def show_more(df, lines):
@@ -57,31 +57,31 @@ def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1 = False,\
 
 """ YAHOO FINANCE SECTION START """
 ###### SET PARAMETERS ######
-def yFinData(period, interval, **stocks):
+# def yFinData(period, interval, **stocks):
 
-    today = dt.today().strftime('%Y-%m-%d')
-    start_dt = "2015-01-01"
-    period = "5y" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
-    interval = "5d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
+#     today = dt.today().strftime('%Y-%m-%d')
+#     start_dt = "2015-01-01"
+#     period = "5y" #1d, 5d, 1mo,3mo,6mo,1y,2y,5y,10,ytd,max
+#     interval = "5d" #1m,2m,5m,15m,30m,60m,90m,1h,1d,5d,1wk,1mo,3mo
 
-    ###### DEFINE STOCKS ######
-    # Google, Apple, Tesla, Crude oil, S&P 500,Parsley Energy Inc.,Oasis Petroleum Inc., Gold, W&T Offshore Inc.,
-    # NASDAQ 100, Goodrich Petroleum Corporation
-    # stocks = 'BZ=F GOOG AAPL TSLA CL = F ^ GSPC PE OAS GC = F WTI NQ = F GDP'
+#     ###### DEFINE STOCKS ######
+#     # Google, Apple, Tesla, Crude oil, S&P 500,Parsley Energy Inc.,Oasis Petroleum Inc., Gold, W&T Offshore Inc.,
+#     # NASDAQ 100, Goodrich Petroleum Corporation
+#     # stocks = 'BZ=F GOOG AAPL TSLA CL = F ^ GSPC PE OAS GC = F WTI NQ = F GDP'
 
-    stocks = "CL=F"  # CL=F ^GSPC OAS GDP ^DJI NQ=F"
+#     stocks = "CL=F"  # CL=F ^GSPC OAS GDP ^DJI NQ=F"
 
-    # GBP/USD, BTC/GBP, USD/JPY, EUR/GBP, ETH/USD
-    # rates = 'GBPUSD=X CNY=X EURUSD=X'
-    tickers = yf.Ticker(stocks)
-    tickers.info
-    ###### GET DATA #######
-    Stocks = yf.download(stocks, period="max", interval="1wk")
-    Stocks.columns
-    # len(Stocks)
-    # Rates = yf.download(rates, period = period, interval = interval)
-    # show_more(Stocks, 300)
-    return Stocks
+#     # GBP/USD, BTC/GBP, USD/JPY, EUR/GBP, ETH/USD
+#     # rates = 'GBPUSD=X CNY=X EURUSD=X'
+#     tickers = yf.Ticker(stocks)
+#     tickers.info
+#     ###### GET DATA #######
+#     Stocks = yf.download(stocks, period="max", interval="1wk")
+#     Stocks.columns
+#     # len(Stocks)
+#     # Rates = yf.download(rates, period = period, interval = interval)
+#     # show_more(Stocks, 300)
+#     return Stocks
 
 """ YAHOO FINANCE SECTION END """
 
@@ -101,11 +101,14 @@ def oilProduction(url='https://www.eia.gov/dnav/pet/hist_xls/WCRFPUS2w.xls'):
 """ DATAHUB SECTION START """
 
 
-def dataHub(url, import_new_data = True, fname = "WTI_oil_prices.csv", error = False):
-    #fname = 'WTI_oil_prices.csv'
+def dataHub(url, import_new_data = True, fname = "standard", error = False):
+
     # import_new_data = False
     today = dt.today().strftime('%Y-%m-%d')
     # error = False  # you can use this flag to tell the programme to basically skip everything else and go to the end so you don't get a crash when there's a problem
+    if fname == 'standard':
+        fname = 'WTI_oil_prices'+str(today)+'.csv'
+
 
     #Allows the user to choose to use a previously downloaded datafile, or to download a new one. Mostly so I don't have to keep downloading the same datafile over and over again
     # if os.path.isfile(fname) == True:
@@ -122,7 +125,10 @@ def dataHub(url, import_new_data = True, fname = "WTI_oil_prices.csv", error = F
     # else:
     #     print("No local file detected, defaulting to downloading data")
     #     import_new_data = True
-
+    if os.path.isfile(fname):
+        print ("File already exists")
+        import_new_data = False
+        
     if import_new_data == False:
         print("Skipping download")
     else:

@@ -4,20 +4,15 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
 from sklearn.externals import joblib
+import os
 import os.path
-import time
-import csv
-import shutil
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+os.chdir(dname)
+
 import pandas as pd
-import math as m
 import numpy as np
 from datetime import datetime as dt
-import os
-import yfinance as yf
-from pandas_datareader import data as pdr
-from IPython.display import display
-import requests
-sys.path.insert(1, "/Users/qw19176/Documents/Courses/codingchallenge/")
 import data_functions as dataFun
 import matplotlib.pyplot as plt
 
@@ -122,24 +117,10 @@ def macd(df, n_fast, n_slow):
     df = df.join(MACDdiff)
     return df
 
-# combined.head(25)
-# len(combined["Prices"][combined["Prices"].isnull()])
-# combined["20dSMA"][combined["20dSMA"].isnull()]
-
-# test = combined["Prices"]
-# tes = test.dropna()
-
-
 priceDF = dataFun.dataHub(url="https://datahub.io/core/oil-prices/r/wti-daily.csv", import_new_data = True)
 oilDF = dataFun.oilProduction()
 df = dataFun.combineFrames(priceDF,oilDF)
-# dataFun.show_more(df, 200)
 df = df[np.isfinite(df['Prices'])]
-
-
-#indices = np.arange(0, len(df))
-#df['indx']
-#df = pd.DataFrame(index = indices, data = df)
 df = df.sort_values(by=['Date'])
 df = df.reset_index().drop(["index"], axis = 1)
 
@@ -161,9 +142,9 @@ df = relative_strength_index(df)
 df["boll_hi"] = pd.to_numeric(df["boll_hi"])
 df["boll_lo"] = pd.to_numeric(df["boll_lo"])
 df["20dSMA"] = pd.to_numeric(df["20dSMA"])
-# df["10dSMA"] = pd.to_numeric(df["10dSMA"])
-# df["5dSMA"] = pd.to_numeric(df["5dSMA"])
-# df["50dSMA"] = pd.to_numeric(df["50dSMA"])
+df["10dSMA"] = pd.to_numeric(df["10dSMA"])
+df["5dSMA"] = pd.to_numeric(df["5dSMA"])
+df["50dSMA"] = pd.to_numeric(df["50dSMA"])
 df["200dSMA"] = pd.to_numeric(df["200dSMA"])
 
 df["bollAmplitude"] = df["boll_hi"] - df["boll_lo"]
@@ -290,10 +271,10 @@ score = lr.score(x_test, y_test)
 accuracy = accuracy_score(y_test, y_pred)
 parameters = lr.coef_
 
-print(score)
+# print(score)
 
-
-filename = 'finalized_model.sav'
+modDate = str(df["Date"].iloc[-1].strftime('%Y-%m-%d'))
+filename = 'finalized_model_'+modDate+'.sav'
 joblib.dump(lr, filename)
 
 
@@ -325,37 +306,37 @@ joblib.dump(lr, filename)
 
 
 
-dataFun.plot2axis(df["Date"], df["Prices"].astype( \
-    float), df["Production of Crude Oil"], "Date", "Price (USD)", \
-    'Production of Crude Oil (Thousand Barrels per Day)', lineax1=False, \
-    lineax1y=df["20dSMA"], lineax1name="20d SMA", \
-    fill_boll=True, bol_high=df["boll_hi"], \
-    bol_low=df["boll_lo"])
+# dataFun.plot2axis(df["Date"], df["Prices"].astype( \
+#     float), df["Production of Crude Oil"], "Date", "Price (USD)", \
+#     'Production of Crude Oil (Thousand Barrels per Day)', lineax1=False, \
+#     lineax1y=df["20dSMA"], lineax1name="20d SMA", \
+#     fill_boll=True, bol_high=df["boll_hi"], \
+#     bol_low=df["boll_lo"])
 
-dfrecent = df[df["Date"]> "2019-01-01"]
-dataFun.plot2axis(dfrecent["Date"], dfrecent["Prices"].astype(
-    float), dfrecent["Production of Crude Oil"], "Date", "Price (USD)",
-    'Production of Crude Oil (Thousand Barrels per Day)')
+# dfrecent = df[df["Date"]> "2019-01-01"]
+# dataFun.plot2axis(dfrecent["Date"], dfrecent["Prices"].astype(
+#     float), dfrecent["Production of Crude Oil"], "Date", "Price (USD)",
+#     'Production of Crude Oil (Thousand Barrels per Day)')
 
-# set style, empty figure and axes
-plt.style.use('fivethirtyeight')
-fig = plt.figure(figsize=(12, 6))
-ax = fig.add_subplot(111)
+# # set style, empty figure and axes
+# plt.style.use('fivethirtyeight')
+# fig = plt.figure(figsize=(12, 6))
+# ax = fig.add_subplot(111)
 
-# Get index values for the X axis for facebook DataFrame
-test = df[df['Date'] > '2019-01-01']
-x_axis = test['Date']
+# # Get index values for the X axis for facebook DataFrame
+# test = df[df['Date'] > '2019-01-01']
+# x_axis = test['Date']
 
-# Plot shaded 21 Day Bollinger Band for Facebook
-ax.fill_between(x_axis, test['boll_hi'], test['boll_lo'], color='blue', alpha = 0.3)
+# # Plot shaded 21 Day Bollinger Band for Facebook
+# ax.fill_between(x_axis, test['boll_hi'], test['boll_lo'], color='blue', alpha = 0.3)
 
-# Plot Adjust Closing Price and Moving Averages
-ax.plot(x_axis, test['Prices'], color='black', lw=2)
-ax.plot(x_axis, test['20dSMA'], color='orange', lw=2)
+# # Plot Adjust Closing Price and Moving Averages
+# ax.plot(x_axis, test['Prices'], color='black', lw=2)
+# ax.plot(x_axis, test['20dSMA'], color='orange', lw=2)
 
-# Set Title & Show the Image
-ax.set_title('20 Day Bollinger Band For WTI Oil Price')
-ax.set_xlabel('Date (Year/Month)')
-ax.set_ylabel('Price(USD)')
-ax.legend()
-plt.show()
+# # Set Title & Show the Image
+# ax.set_title('20 Day Bollinger Band For WTI Oil Price')
+# ax.set_xlabel('Date (Year/Month)')
+# ax.set_ylabel('Price(USD)')
+# ax.legend()
+# plt.show()

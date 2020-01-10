@@ -1,20 +1,22 @@
 import data_functions as dataFun
-from sklearn.metrics import accuracy_score
-from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import train_test_split
+#from sklearn.metrics import accuracy_score
+#from sklearn.metrics import confusion_matrix
+#from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from sklearn.datasets import make_classification
 from sklearn.externals import joblib
-import os.path
+#import os.path
 import time
-import csv
-import shutil
+import glob
+#import csv
+#import shutil
 import pandas as pd
 import math as m
 import numpy as np
 from datetime import datetime as dt
+from datetime import timedelta
 import os
-from pandas_datareader import data as pdr
+#from pandas_datareader import data as pdr
 #from IPython.display import display
 import requests
 import sys
@@ -32,21 +34,98 @@ df = df[np.isfinite(df['Prices'])]
 df = df.sort_values(by=['Date'])
 df = df.reset_index().drop(["index"], axis=1)
 
-today = dt.today().strftime('%Y-%m-%d')
+today = dt.today()
+defaultDay = (today + timedelta(days=1)).strftime('%Y-%m-%d')
 # df2 = pd.DataFrame
 
 
-print("Please enter the current WTI Oil Price")
-newPrice = float(input())
 
-print("Please enter the current WTI Oil Production Value")
-newProd = float(input())
+print("Please enter the date you want have a prediction for (format: 'yyyy-mm-dd')")
 
-#print("Please enter the end date for Price data import (format yyyy-mm-dd)")
-#endDate = str(input())
+while True:
+    try:
+        predDate = str(input())
+        datey = dt.strptime(predDate, '%Y-%m-%d').strftime('%Y-%m-%d')
+        if datey > defaultDay:
+            print("Input date too far in future, currently only 1 day into the future is predictable")
+            raise ValueError
+        if datey < '2000-01-01':
+            print("Input date too far in the past, enter a more recent date")
+            raise ValueError 
+        
+    except(ValueError):
+        try:
+            print("Date {} entered is not suitable".format(datey))
+            agree = "n"
+                
+            print("Do you want to default to {}? (Y/N)".format(defaultDay))
+            
+            while True:
+                try:
+                    agree = str(input()).lower()
+                    
+                    if agree == "y":
+                        datey = defaultDay
+                        break
+                    
+                    elif agree == "n":
+                        break
+                    
+                    else:
+                        print("Please choose Y or N!")
+                        
+                except ValueError:
+                    print("Please choose Y or N!") 
+            
+        except(NameError):
+            print("Please enter a date in correct format (yyyy-mm-dd)!")
+            continue
+        
+        if agree == "y":
+            break
+        elif agree == "n":
+            print("Please enter the date you want have a prediction for (format: 'yyyy-mm-dd')")
+            continue
+    else:
+        break
+    
+print("Please enter the current ({}) WTI Oil Price".format(
+    (dt.strptime(datey, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')))
 
-df = df.append({"Date": today, "Prices": newPrice,
-                "Production of Crude Oil": newProd}, ignore_index=True)
+while True:
+    try:
+        newPrice = float(input())
+    except(ValueError):
+        print("Please enter a number")
+        continue
+    else:
+        break
+
+if datey < defaultDay:
+    try:
+        newProd = float(df[df["Date"] == datey]['Production of Crude Oil'])
+    except(TypeError):
+        try:
+            newday = (dt.strptime(datey, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+            newProd = float(df[df["Date"] == newday]['Production of Crude Oil'])
+        except(TypeError):
+            try: 
+                newday = (dt.strptime(datey, '%Y-%m-%d') - timedelta(days=2)).strftime('%Y-%m-%d')
+                newProd = float(df[df["Date"] == newday]['Production of Crude Oil'])
+            except(TypeError):
+                try:
+                    newday = (dt.strptime(datey, '%Y-%m-%d') -
+                            timedelta(days=23)).strftime('%Y-%m-%d')
+                    newProd = float(df[df["Date"] == newday]
+                                    ['Production of Crude Oil'])
+                except(TypeError):
+                    newProd = df['Production of Crude Oil'].iloc[-1]
+else: 
+    newProd = df['Production of Crude Oil'].iloc[-1]
+    
+df = df[df["Date"] < datey]
+
+df = df.append({"Date": datey, "Prices": newPrice, "Production of Crude Oil": newProd}, ignore_index=True)
 df["Date"] = pd.to_datetime(df["Date"])
 
 
@@ -174,7 +253,25 @@ df["distFromTopBoll"] = df["boll_hi"] - df["Prices"]
 df["distFromLowBoll"] = df["boll_lo"] - df["Prices"]
 df["20d200dDist"] = np.abs(df["20dSMA"] - df["200dSMA"])
 
-filename = 'finalized_model.sav'
+try:
+    filename = sys.argv[1]
+except(NameError):
+    print("Specified model does not exist")
+    abspath = str(os.getcwd()+"/*.sav")
+    try:
+        filename = glob.glob(abspath)[-1]
+        print("Using latest model file {}".format(filename))
+    except(NameError):
+        print("Model does not exist, exiting")
+except(IndexError):
+    print("No model specified")
+    abspath = str(os.getcwd()+"/*.sav")
+    try:
+        filename = glob.glob(abspath)[-1]
+        print("Using latest model file {}".format(filename))
+    except(NameError):
+        print("Model does not exist, exiting")
+
 model = joblib.load(filename)
 #result = model.score(X_test, Y_test)
 #print(result)
@@ -186,9 +283,9 @@ pred = model.predict(x_test)
 proba = model.predict_proba(x_test)
 
 if pred[0] == 0:
-    print("the price of oil is not likely to increase tomorrow with probability {:.1%}".format(proba[0][0]))
+    print("The price of oil is likely to decrease tomorrow with probability {:.1%}".format(proba[0][0]))
 else:
-    print("the price of oil is likely to increase tomorrow with probability {:.1%}".format(
+    print("The price of oil is likely to increase tomorrow with probability {:.1%}".format(
         proba[0][1]))
 
 
