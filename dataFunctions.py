@@ -12,7 +12,6 @@ import urllib.error as ue
 import shutil
 import csv
 import time
-from datetime import datetime as dt
 import os
 import os.path
 abspath = os.path.abspath(__file__)
