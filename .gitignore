@@ -52,3 +52,5 @@ __pycache__*
 *.h5
 tensorTrade.py
 *.sav
+/outputs/*
+/inputs/*

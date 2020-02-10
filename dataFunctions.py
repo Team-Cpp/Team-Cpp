@@ -19,10 +19,9 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 
-def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1=False,
+def plot2axis(x, y1, y2, y_name, x_name = "Date", y2_name = "WTI Price", lineax1=False,
               lineax1y=0, lineax1name="lost", fill_boll=False,
               bol_low=[], bol_high=[], bol_name="easy"):
-    import matplotlib.pyplot as plt
 
     plt.style.use("seaborn")
     fig, ax = plt.subplots()
@@ -49,7 +48,7 @@ def plot2axis(x, y1, y2, x_name, y_name, y2_name, lineax1=False,
     ax2.plot(x, y2, color=color, lw=1.5, label=y2_name)
     ax2.tick_params(axis='y', labelcolor=color)
     fig.tight_layout()
-    plt.show()
+    # plt.show()
 
 
 # yf.pdr_override() #pandas datareader format
