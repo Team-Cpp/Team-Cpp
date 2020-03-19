@@ -37,6 +37,7 @@ ehthumbs.db
 Thumbs.db
 
 ### Data sets, pdfs, etc. ###
+#######################
 *.csv
 *.pdf
 *.docx
@@ -44,3 +45,12 @@ Thumbs.db
 *.html
 *.ppt
 *.pptx
+__pycache__*
+*checkpoints*
+*.pyc
+*.png
+*.h5
+tensorTrade.py
+*.sav
+/outputs/*
+/inputs/*
