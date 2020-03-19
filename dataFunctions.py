@@ -19,45 +19,52 @@ dname = os.path.dirname(abspath)
 os.chdir(dname)
 
 
-def plot2axis(x, y1, y2, y_name, x_name = "Date", y2_name = "WTI Price", lineax1=False,
+def plot2axis(x, y1, y_name, color1 = "tab:black", axis2 = False, x_name = "Date", 
+              y2 = [], y2_name = "WTI Price", color2 = "tab:blue", lineax1=False,
               lineax1y=0, lineax1name="lost", fill_boll=False,
               bol_low=[], bol_high=[], bol_name="easy"):
 
-    plt.style.use("seaborn")
+    plt.style.use("fivethirtyeight")
+    plt.figure(figsize=(20,10))
+
     fig, ax = plt.subplots()
-    color = 'tab:green'
+    color = color1
     ax.set_xlabel(x_name, size=16)
     ax.set_ylabel(y_name, size=16, color=color)
     ax.plot(x, y1, lw=1, color=color, label=y_name)
     ax.tick_params(axis='y', labelcolor=color)
-    if lineax1 == True:
+    
+    if lineax1 is True:
         ax.plot(x, lineax1y, label=lineax1name,
                 linewidth=2, alpha=0.75, color="orange")
-    if fill_boll == True:
+        
+    if fill_boll is True:
         # ax.axhspan(bol_low, bol_high, facecolor='blue', label=bol_name, alpha=0.75)
         ax.fill_between(x, bol_high,
-                        bol_low, color='blue', alpha=0.75)
-
+                        bol_low, color='blue', alpha=0.33)
+        
     ax.legend(loc='upper left', prop={'size': 16})
-
-    ax2 = ax.twinx()
-    color = 'tab:blue'
     
-    # we already handled the x-label with ax
-    ax2.set_ylabel(y2_name, size=14, color=color)
-    ax2.plot(x, y2, color=color, lw=1.5, label=y2_name)
-    ax2.tick_params(axis='y', labelcolor=color)
+    if axis2 is True:
+        ax2 = ax.twinx()
+        color = color2
+        
+        # we already handled the x-label with ax
+        ax2.set_ylabel(y2_name, size=14, color=color)
+        ax2.plot(x, y2, color=color, lw=1.5, label=y2_name)
+        ax2.tick_params(axis='y', labelcolor=color)
+    ax.legend(loc='upper left', prop={'size': 16})
     fig.tight_layout()
     # plt.show()
 
 
-# yf.pdr_override() #pandas datareader format
 
 """ YAHOO FINANCE SECTION START """
 ###### SET PARAMETERS ######
+# yf.pdr_override() #pandas datareader format
 
 
-def yFinData(startDt, interval = "1d", endDt = -1, stock="CL=F", onlyClose = 1,name="Prices"):
+def yFinData(startDt, interval = "1d", endDt = -1, stock="CL=F", onlyClose = True, name="Prices"):
     today = dt.today().strftime('%Y-%m-%d')
     if endDt == -1:
         endDt = today
@@ -83,7 +90,7 @@ def yFinData(startDt, interval = "1d", endDt = -1, stock="CL=F", onlyClose = 1,n
     Stocks = Stocks.sort_values(by =["Date"])
     Stocks = Stocks.drop_duplicates(keep="first")
    
-    if onlyClose == 1:
+    if onlyClose:
         Stocks = Stocks.drop(['Open', 'High', 'Low', 'Adj Close', 'Volume'], axis=1)
         Stocks = Stocks.rename(columns={"Close": name})
     # Stocks.columns
