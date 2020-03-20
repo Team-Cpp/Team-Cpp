@@ -25,25 +25,14 @@ Created on Thu Feb  6 13:08:49 2020
 #
 #
 import os
+import sys
 import os.path
+sys.path.insert(1, os.environ['DF_ROOT']+"/commonFunctions/")
+
 #abspath = os.path.abspath(__file__)
 #dname = os.path.dirname(abspath)
 #os.chdir(dname)
-import rrsBdtDevDependencies
-import dataFunctions as dataFun
-from datetime import datetime as dt
-import quandl
-import yfinance as yf
-import numpy as np
-import pandas as pd
-
-from xgboost import XGBRegressor
-from xgboost import XGBClassifier
-from sklearn.metrics import mean_squared_error
-import seaborn as sns
-import matplotlib.pyplot as plt
-import xgboost as xgb
-from xgboost import plot_importance, plot_tree
+import bdtDevDependencies
 
 ##--------------------------------------------------------------------
 #Start of Function Definitions
