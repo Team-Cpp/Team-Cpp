@@ -144,7 +144,7 @@ tableschema==1.7.4
 tabulator==1.26.1
 talos==0.6.6
 tensorboard==1.14.0
-tensorflow==1.14.0
+tensorflow==1.15.2
 tensorflow-estimator==1.14.0
 Tensorforce==0.5.2
 tensortrade==0.1.0rc1
