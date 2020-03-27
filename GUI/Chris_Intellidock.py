@@ -11,7 +11,7 @@ Created on Thu Feb  6 13:08:49 2020
 #Done!
 
 #Run a test to see if it makes a profit/loss overall and see by how much
-#
+#Done!
 
 #Display how much each parameter actually impacts the result
 #Partial...
@@ -24,19 +24,25 @@ Created on Thu Feb  6 13:08:49 2020
 #Find a way to host the model stuff online somewhere
 #
 #
-import os
-import os.path
+#import os
+#import os.path
 #abspath = os.path.abspath(__file__)
 #dname = os.path.dirname(abspath)
 #os.chdir(dname)
+
+import os
+import sys
+sys.path.insert(1,os.environ['DF_ROOT'])
+
 import pandas as pd
+print(pd.__file__)
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
-import dataFunctions as dataFun
+
+import commonFunctions.dataFunctions as dataFun
 
 from sklearn.ensemble import GradientBoostingRegressor
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
 from sklearn.datasets import load_boston
 from sklearn.metrics import mean_absolute_error
@@ -59,6 +65,8 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import xgboost as xgb
 from xgboost import plot_importance, plot_tree
+
+
 
 ##--------------------------------------------------------------------
 #Start of Function Definitions112
@@ -93,7 +101,7 @@ def create_features(df, label=None, shift = 0):
         return X, y
     return X
 
-def Intellidock_Test_Accuracy(df,window):
+def Intellidock_Test_Accuracy(df,window,barrels,costPerDay):
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
     df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
     df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
@@ -194,7 +202,7 @@ def Intellidock_Train(df):
     print("\n Training Complete!")
     return df, model, X_test, y_test
     
-def Intellidock_Predict_Next_Day(df,model,X_test, y_test,window):
+def Intellidock_Predict_Next_Day(df,model,X_test, y_test,window,barrels,costPerDay):
     WTI_Prediction_tomorrow = model.predict(X_test)[0]
     #WTI_Prediction_tomorrow_confidence = model.predict_proba(X_test)
         
@@ -390,7 +398,7 @@ def Intellidock_Get_Data():
     print("Complete!")
     return df
 
-def Intellidock_Test_Profitability(df,window):
+def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
     df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
     df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
