@@ -1,6 +1,9 @@
 #import tkinter
 from tkinter import *
 
+import os
+import sys
+sys.path.insert(1,os.environ['DF_ROOT'])
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)

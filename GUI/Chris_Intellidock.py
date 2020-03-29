@@ -101,13 +101,18 @@ def create_features(df, label=None, shift = 0):
         return X, y
     return X
 
+#This Function had been retired - its functionality is duplicated in the profitability test, so for now it just calls that function to avoid breaking the GUI until that can eb updated
 def Intellidock_Test_Accuracy(df,window,barrels,costPerDay):
+    Intellidock_Test_Profitability()
+    """
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
     df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
     df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
     df['Correct Prediction?'] = pd.Series(np.zeros(len(df.index)))
     df['Deviation'] = pd.Series(np.zeros(len(df.index)))
     preset_early_stopping_rounds = 100
+    sum_of_squares = 0
+    n = len(df.index)-preset_early_stopping_rounds
     
     for i in range(preset_early_stopping_rounds,len(df.index)):
         print(i)
@@ -160,19 +165,25 @@ def Intellidock_Test_Accuracy(df,window,barrels,costPerDay):
                         
         if(df['Prices_iterative_delta'][i]==df['WTI_Prediction_iterative_delta'][i]):
             df['Correct Prediction?'][i]=1
+        
             
         df["Deviation"][i] = abs(df['WTI_Prediction_iterative'][i]-df['Prices'][i])
+        sum_of_squares += df["Deviation"][i]
+        
     print ("Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],".")
-    print("Mean error as absolute deviation from truth value: ", df["Deviation"].mean())
+    
+    standard_deviation = (sum_of_squares/n - df["Deviation"].mean()**2)**0.5
+    
+    print("Mean error as absolute deviation from truth value: ", standard_deviation)
     
     string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
-    string2 = "Mean error as absolute deviation from truth value: ", df["Deviation"].mean()
+    string2 = "Mean error as absolute deviation from truth value: ", standard_deviation
     lbl = Label(window, text=string1,font = ('Arial',30))
     lbl.grid(column=0, row=0)  
     lbl = Label(window, text=string2,font = ('Arial',30))
     lbl.grid(column=0, row=1)  
-    
-    return
+    """
+    return()
 
 def Intellidock_Train(df):
     
@@ -407,6 +418,9 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     df['Relative Profit'] = pd.Series(np.zeros(len(df.index)))
     df['Confidence Values'] = pd.Series(np.zeros(len(df.index)))
     preset_early_stopping_rounds = 100
+    sum_of_squares = 0
+    n = len(df.index)-preset_early_stopping_rounds
+    
     run_start = 0
     run_active = False
     for i in range(preset_early_stopping_rounds,len(df.index)):
@@ -473,18 +487,26 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
             df['Correct Prediction?'][i]=1
             
         df["Deviation"][i] = abs(df['WTI_Prediction_iterative'][i]-df['Prices'][i])
+        sum_of_squares += df["Deviation"][i]
                   
     print ("Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],".")
-    print("Mean error as absolute deviation from truth value: ", df["Deviation"].mean())
+    
+    standard_deviation = (sum_of_squares/n - df["Deviation"].mean()**2)**0.5
+    
+    print("Mean error as standard deviation from truth value: ", standard_deviation)
     
     print("\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:")
     print (df["Relative Profit"].sum()/len(df.index))
     
     
     string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
-    string2 = "Mean error as absolute deviation from truth value: ", df["Deviation"].mean()
+    string2 = "Mean error as standard deviation from truth value: ", standard_deviation
     string3 = "\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"
     string4 = df["Relative Profit"].sum()/len(df.index)
+    
+    plt.hist(df['Deviation'])
+    plt.savefig('Deviation_Histogram.pdf')
+    plt.show
     
     lbl = Label(window, text=string1,font = ('Arial',30))
     lbl.grid(column=0, row=0)    
@@ -494,6 +516,7 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     lbl.grid(column=0, row=2)    
     lbl = Label(window, text=string4,font = ('Arial',30))
     lbl.grid(column=0, row=3)    
+    
     
     return
 
