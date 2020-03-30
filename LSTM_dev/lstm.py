@@ -3,7 +3,7 @@ import math
 import numpy as np
 import datetime as dt
 from numpy import newaxis
-from core.utils import Timer
+from utils import Timer
 from keras.layers import Dense, Activation, Dropout, LSTM
 from keras.models import Sequential, load_model
 from keras.callbacks import EarlyStopping, ModelCheckpoint
@@ -29,11 +29,13 @@ class Model():
 			return_seq = layer['return_seq'] if 'return_seq' in layer else None
 			input_timesteps = layer['input_timesteps'] if 'input_timesteps' in layer else None
 			input_dim = layer['input_dim'] if 'input_dim' in layer else None
+			stateful = layer['stateful'] if 'stateful' in layer else None
+			kernel_init = layer['kernel_initializer'] if 'kernel_initializer' in layer else None
 
 			if layer['type'] == 'dense':
 				self.model.add(Dense(neurons, activation=activation))
 			if layer['type'] == 'lstm':
-				self.model.add(LSTM(neurons, input_shape=(input_timesteps, input_dim), return_sequences=return_seq))
+				self.model.add(LSTM(neurons, input_shape=(input_timesteps, input_dim), stateful=stateful,return_sequences=return_seq, kernel_initializer=kernel_init))
 			if layer['type'] == 'dropout':
 				self.model.add(Dropout(dropout_rate))
 
@@ -50,14 +52,15 @@ class Model():
 		
 		save_fname = os.path.join(save_dir, '%s-e%s.h5' % (dt.datetime.now().strftime('%d%m%Y-%H%M%S'), str(epochs)))
 		callbacks = [
-			EarlyStopping(monitor='val_loss', patience=2),
-			ModelCheckpoint(filepath=save_fname, monitor='val_loss', save_best_only=True)
+			EarlyStopping(monitor='val_loss', patience=20, min_delta=0.0001),
+			ModelCheckpoint(filepath=save_fname, monitor='val_loss', save_best_only=True, save_weights_only=False, period=1)
 		]
 		self.model.fit(
 			x,
 			y,
 			epochs=epochs,
 			batch_size=batch_size,
+			verbose=2,
 			callbacks=callbacks
 		)
 		self.model.save(save_fname)
