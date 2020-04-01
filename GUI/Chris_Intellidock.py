@@ -103,7 +103,7 @@ def create_features(df, label=None, shift = 0):
 
 #This Function had been retired - its functionality is duplicated in the profitability test, so for now it just calls that function to avoid breaking the GUI until that can eb updated
 def Intellidock_Test_Accuracy(df,window,barrels,costPerDay):
-    Intellidock_Test_Profitability()
+    Intellidock_Test_Profitability(df,window,barrels,costPerDay)
     """
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
     df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
