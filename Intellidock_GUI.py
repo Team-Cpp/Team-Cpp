@@ -22,8 +22,6 @@ costPerDay = 30000
 days = 1
 trained = False
 data_acquired = False
-   
-
 
 root = Tk()
 root.wm_title("Intellidock")
