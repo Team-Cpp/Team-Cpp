@@ -506,8 +506,8 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     string4 = df["Relative Profit"].sum()/len(df.index)
     
     plt.hist(df['Deviation'])
-    plt.savefig('Deviation_Histogram.pdf')
-    plt.show
+    plt.savefig('Deviation_Histogram.png')
+    plt.show()
     
     lbl = Label(window, text=string1,font = ('Arial',30))
     lbl.grid(column=0, row=0)    
