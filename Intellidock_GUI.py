@@ -85,6 +85,12 @@ def profit(df):
 
     Intellidock_Test_Profitability(df,window,barrels,costPerDay)
     
+    window2 = Toplevel(window)
+    canvas = Canvas(window2, width = 400, height = 300)      
+    canvas.pack()          
+    window2.img = img = PhotoImage(file="Deviation_Histogram.png")  
+
+    canvas.create_image(0,0, anchor=NW, image=img)
 def features():
     window = Toplevel(root)  
     
