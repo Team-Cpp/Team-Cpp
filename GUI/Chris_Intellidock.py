@@ -487,8 +487,8 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
         if(df['Prices_iterative_delta'][i]==df['WTI_Prediction_iterative_delta'][i]):
             df['Correct Prediction?'][i]=1
             
-        df["Deviation"][i] = abs(df['WTI_Prediction_iterative'][i]-df['Prices'][i])
-        sum_of_squares += df["Deviation"][i]
+        df["Deviation"][i] = (df['WTI_Prediction_iterative'][i]-df['Prices'][i])
+        sum_of_squares += (df["Deviation"][i])**2
                   
     print ("Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],".")
     
@@ -499,15 +499,30 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     print("\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:")
     print (df["Relative Profit"].sum()/len(df.index))
     
+    fraction_included = 0.0
     
+    for i in range(0,len(df.index)):
+        if df['Deviation'][i]<1.645*standard_deviation and df['Deviation'][i]>-1.645*standard_deviation:
+            fraction_included += 1
+    fraction_included = fraction_included/len(df.index)
+        
+    
+    print("Theoretical 90%CL: +-", 1.645*standard_deviation)
+    
+    print("Actual amount enclosed in this interval:", fraction_included)
+      
     string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
     string2 = "Mean error as standard deviation from truth value: ", standard_deviation
     string3 = "\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"
     string4 = df["Relative Profit"].sum()/len(df.index)
+   
+    string5 = "Theoretical 90%CL: +-", 1.645*standard_deviation
+    string6 = "Actual amount enclosed in this interval:", fraction_included
     
-    plt.hist(df['Deviation'])
+    plt.hist(df['Deviation'],bins = 26)
     plt.savefig('Deviation_Histogram.png')
     plt.show()
+
     
     lbl = Label(window, text=string1,font = ('Arial',30))
     lbl.grid(column=0, row=0)    
@@ -516,7 +531,12 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     lbl = Label(window, text=string3,font = ('Arial',30))
     lbl.grid(column=0, row=2)    
     lbl = Label(window, text=string4,font = ('Arial',30))
-    lbl.grid(column=0, row=3)    
+    lbl.grid(column=0, row=3)
+    
+    lbl = Label(window, text=string5,font = ('Arial',30))
+    lbl.grid(column=0, row=4)
+    lbl = Label(window, text=string6,font = ('Arial',30))
+    lbl.grid(column=0, row=5)    
     
     
     return
