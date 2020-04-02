@@ -1,12 +1,13 @@
 import os
 import math
+import time
 import numpy as np
 import datetime as dt
 from numpy import newaxis
 from utils import Timer
 from keras.layers import Dense, Activation, Dropout, LSTM
 from keras.models import Sequential, load_model
-from keras.callbacks import EarlyStopping, ModelCheckpoint
+from keras.callbacks import EarlyStopping, ModelCheckpoint, CSVLogger
 
 class Model():
 	"""A class for an building and inferencing an lstm model"""
@@ -30,12 +31,13 @@ class Model():
 			input_timesteps = layer['input_timesteps'] if 'input_timesteps' in layer else None
 			input_dim = layer['input_dim'] if 'input_dim' in layer else None
 			stateful = layer['stateful'] if 'stateful' in layer else None
-			kernel_init = layer['kernel_initializer'] if 'kernel_initializer' in layer else None
-
+			kernel_init = layer['kernel_initializer'] if 'kernel_initializer' in layer else "uniform"
+			output_dim = layer['output_dim'] if 'output_dim' in layer else None
+   
 			if layer['type'] == 'dense':
-				self.model.add(Dense(neurons, activation=activation))
+				self.model.add(Dense(neurons, activation=activation, output_dim=output_dim))
 			if layer['type'] == 'lstm':
-				self.model.add(LSTM(neurons, input_shape=(input_timesteps, input_dim), stateful=stateful,return_sequences=return_seq, kernel_initializer=kernel_init))
+				self.model.add(LSTM(neurons, input_shape=(input_timesteps, input_dim), stateful=stateful, return_sequences=return_seq, kernel_initializer=kernel_init))
 			if layer['type'] == 'dropout':
 				self.model.add(Dropout(dropout_rate))
 
@@ -52,10 +54,11 @@ class Model():
 		
 		save_fname = os.path.join(save_dir, '%s-e%s.h5' % (dt.datetime.now().strftime('%d%m%Y-%H%M%S'), str(epochs)))
 		callbacks = [
-			EarlyStopping(monitor='val_loss', patience=20, min_delta=0.0001),
-			ModelCheckpoint(filepath=save_fname, monitor='val_loss', save_best_only=True, save_weights_only=False, period=1)
+			EarlyStopping(monitor='val_loss', patience=20, min_delta=0.001),
+			ModelCheckpoint(filepath=save_fname, monitor='val_loss', save_best_only=True, save_weights_only=False, period=1),
+   			CSVLogger(os.path.join(save_dir, 'training_log_' + time.ctime().replace(" ","_") + '.log'), append=True)
 		]
-		self.model.fit(
+		history = self.model.fit(
 			x,
 			y,
 			epochs=epochs,
@@ -67,6 +70,7 @@ class Model():
 
 		print('[Model] Training Completed. Model saved as %s' % save_fname)
 		timer.stop()
+		return history
 
 	def train_generator(self, data_gen, epochs, batch_size, steps_per_epoch, save_dir):
 		timer = Timer()

@@ -1,31 +1,56 @@
 {
     "data": {
-        "filename": "sp500-new.csv",
+        "filename": "/Users/qw19176/Documents/Courses/codingChallenge/march2020/Team-Cpp/LSTM_dev/inputs/modelInputData.csv",
         "columns": [
-            "Return",
-            "Volume"
+            "Prices",
+            "NatGasPrices",
+            "BrentPrices",
+            "DowJones",
+            "Gold"
         ],
-        "sequence_length": 50,
-        "train_test_split": 0.85,
+        "sequence_length": 30,
+        "train_test_split": 0.9,
         "normalise": true
     },
     "training": {
-        "epochs": 10,
-        "batch_size": 32
+        "epochs": 10, 
+        "batch_size": 22
     },
     "model": {
         "loss": "mse",
         "optimizer": "adam",
         "learning_rate": 0.001,
-        "save_dir": "outputs",
+        "save_dir": "/Users/qw19176/Documents/Courses/codingChallenge/march2020/Team-Cpp/LSTM_dev/outputs/",
         "layers": [
             {
                 "type": "lstm",
-                "neurons": 100,
-                "input_timesteps": 49,
-                "input_dim": 2,
-                "stateful": true,
+                "neurons": 128,
+                "input_timesteps": 29,
+                "input_dim": 5,
+                "stateful": false,
                 "return_seq": true,
+                "kernel_initializer": "random_uniform"
+            },
+            {
+                "type": "dropout", 
+                "rate": 0.33,
+                "kernel_initializer": "random_uniform"
+            },
+            {
+                "type": "lstm", 
+                "neurons": 96, 
+                "return_seq": true,
+                "kernel_initializer": "random_uniform"
+            },
+            {
+                "type": "dropout", 
+                "rate": 0.33,
+                "kernel_initializer": "random_uniform"
+            },
+            {
+                "type": "lstm",
+                "neurons": 64,
+                "return_seq": false,
                 "kernel_initializer": "random_uniform"
             },
             {
@@ -33,23 +58,11 @@
                 "rate": 0.2
             },
             {
-                "type": "lstm",
-                "neurons": 100,
-                "return_seq": true
-            },
-            {
-                "type": "lstm",
-                "neurons": 100,
-                "return_seq": false
-            },
-            {
-                "type": "dropout",
-                "rate": 0.2
-            },
-            {
-                "type": "dense",
-                "neurons": 1,
-                "activation": "linear"
+                "type": "dense", 
+                "neurons": 1, 
+                "activation": "linear",
+                "output_dim": 1,
+                "kernel_initializer": "random_uniform"
             }
         ]
     }

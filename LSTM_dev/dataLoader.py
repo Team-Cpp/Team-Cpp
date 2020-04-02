@@ -6,14 +6,14 @@ class DataLoader():
     """A class for loading and transforming data for the lstm model"""
 
     def __init__(self, filename, split, cols, rate):
-        dataframe = pd.read_csv(filename)
-        i_split = int(len(dataframe) * split)
+        dataframe       = pd.read_csv(filename)
+        i_split         = int(len(dataframe) * split)
         self.data_train = dataframe.get(cols).values[:i_split]
         self.data_test  = dataframe.get(cols).values[i_split:]
         self.len_train  = len(self.data_train)
         self.len_test   = len(self.data_test)
         self.len_train_windows = None
-        self.rate=rate
+        self.rate       = rate
 
     def save_test_data(self,filename):
         np.savetxt(filename,self.data_test, delimiter=',')
@@ -87,7 +87,7 @@ class DataLoader():
         window_data = [window_data] if single_window else window_data
         for window in window_data:
             normalised_window = []
-            for col_i in range(window.shape[1]): #We always normalize volume data!
+            for col_i in range(window.shape[1]): #We always normalize data!
                 if ((col_i==1) or (not self.rate)):
                     normalised_col = [((float(p) / float(window[0, col_i])) - 1) for p in window[:, col_i]]
                 else:
@@ -97,3 +97,6 @@ class DataLoader():
             normalised_window = np.array(normalised_window).T # reshape and transpose array back into original multidimensional format
             normalised_data.append(normalised_window)
         return np.array(normalised_data)
+    
+    def scale_windows(self, window_data, single_window=False):
+        return 0
