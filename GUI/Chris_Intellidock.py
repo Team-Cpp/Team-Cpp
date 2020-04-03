@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Thu Feb  6 13:08:49 2020
-
 @author: nj18237
 """
 
@@ -32,7 +31,7 @@ Created on Thu Feb  6 13:08:49 2020
 
 import os
 import sys
-sys.path.insert(1,os.environ['DF_ROOT'])
+#sys.path.insert(1,os.environ['DF_ROOT'])
 
 import pandas as pd
 print(pd.__file__)
@@ -40,7 +39,7 @@ import requests
 import numpy as np
 import matplotlib.pyplot as plt
 
-import commonFunctions.dataFunctions as dataFun
+import dataFunctions as dataFun
 
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
@@ -65,7 +64,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import xgboost as xgb
 from xgboost import plot_importance, plot_tree
-
 
 
 ##--------------------------------------------------------------------
@@ -103,7 +101,8 @@ def create_features(df, label=None, shift = 0):
 
 #This Function had been retired - its functionality is duplicated in the profitability test, so for now it just calls that function to avoid breaking the GUI until that can eb updated
 def Intellidock_Test_Accuracy(df,window,barrels,costPerDay):
-    Intellidock_Test_Profitability(df,window,barrels,costPerDay)
+    string1,string2,string3,string4 = Intellidock_Test_Profitability(df,window,barrels,costPerDay)
+    return(string1,string2,string3,string4)
     """
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
     df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
@@ -213,7 +212,7 @@ def Intellidock_Train(df):
     print("\n Training Complete!")
     return df, model, X_test, y_test
     
-def Intellidock_Predict_Next_Day(df,model,X_test, y_test,window,barrels,costPerDay):
+def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     WTI_Prediction_tomorrow = model.predict(X_test)[0]
     #WTI_Prediction_tomorrow_confidence = model.predict_proba(X_test)
         
@@ -224,15 +223,11 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,window,barrels,costPerD
     if (delta_predicted > 0):
         output_string = "Predicted price increase is sufficient to warrant waiting until tomorrow."
         print("\033[92m" + output_string + "\033[0m")
-        
-        lbl = Label(window, text= output_string,font = ('Arial',30))
-        lbl.grid(column=0, row=0)    
+          
     else:  
         output_string = "Predicted price change does not warrant waiting until tomorrow."
         print("\033[91m" + output_string + "\033[0m")
-        
-        lbl = Label(window, text= output_string,font = ('Arial',30))
-        lbl.grid(column=0, row=0)    
+                
     
     print("Details:")
     print("Price Today: ",df['Prices'][len(df.index)-1])
@@ -255,26 +250,7 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,window,barrels,costPerD
     string8 = "Gain if Sold Tomorrow Minus Operating Costs:", barrels*WTI_Prediction_tomorrow-costPerDay
     
     
-    lbl = Label(window, text="Details:",font = ('Arial',30))
-    lbl.grid(column=0, row=1)    
-    lbl = Label(window, text=string1,font = ('Arial',30))
-    lbl.grid(column=0, row=2)    
-    lbl = Label(window, text=string2,font = ('Arial',30))
-    lbl.grid(column=0, row=3)    
-    lbl = Label(window, text=string3,font = ('Arial',30))
-    lbl.grid(column=0, row=4)    
-    lbl = Label(window, text=string4,font = ('Arial',30))
-    lbl.grid(column=0, row=5)    
-    lbl = Label(window, text=string5,font = ('Arial',30))
-    lbl.grid(column=0, row=6)    
-    lbl = Label(window, text=string6,font = ('Arial',30))
-    lbl.grid(column=0, row=7)    
-    lbl = Label(window, text=string7,font = ('Arial',30))
-    lbl.grid(column=0, row=8)    
-    lbl = Label(window, text=string8,font = ('Arial',30))
-    lbl.grid(column=0, row=9)    
-    
-    return 
+    return(output_string,string1,string2,string3,string4,string5,string6,string7,string8)
 
 def Intellidock_Display_Feature_Importance(df,model,X_test, y_test):
     fig, ax = plt.subplots(figsize=(12,18))
@@ -409,7 +385,7 @@ def Intellidock_Get_Data():
     print("Complete!")
     return df
 
-def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
+def Intellidock_Test_Profitability(df,barrels,costPerDay):
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
     df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
     df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
@@ -504,21 +480,14 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     string3 = "\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"
     string4 = df["Relative Profit"].sum()/len(df.index)
     
+    plt.figure()
     plt.hist(df['Deviation'])
     plt.savefig('Deviation_Histogram.png')
     plt.show()
     
-    lbl = Label(window, text=string1,font = ('Arial',30))
-    lbl.grid(column=0, row=0)    
-    lbl = Label(window, text=string2,font = ('Arial',30))
-    lbl.grid(column=0, row=1)    
-    lbl = Label(window, text=string3,font = ('Arial',30))
-    lbl.grid(column=0, row=2)    
-    lbl = Label(window, text=string4,font = ('Arial',30))
-    lbl.grid(column=0, row=3)    
     
     
-    return
+    return(string1,string2,string3,string4)
 
 ##-----------------------------------------------------------------------------    
 #End of function Definitions
@@ -527,4 +496,3 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     
 
 #---------------------------------------------
-
