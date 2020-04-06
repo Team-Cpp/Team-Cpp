@@ -1,4 +1,4 @@
-import dataFunctionsDeps
+import commonFunctions.dataFunctionsDeps
 from datetime import datetime as dt
 import matplotlib.pyplot as plt
 import requests

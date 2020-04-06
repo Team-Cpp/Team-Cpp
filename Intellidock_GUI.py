@@ -1,6 +1,9 @@
 #import tkinter
 from tkinter import *
 
+import os
+import sys
+sys.path.insert(1,os.environ['DF_ROOT'])
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -11,7 +14,7 @@ import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 
-import Chris_Intellidock
+from GUI.Chris_Intellidock import *
 
 
 barrels = 750000
@@ -19,8 +22,6 @@ costPerDay = 30000
 days = 1
 trained = False
 data_acquired = False
-   
-
 
 root = Tk()
 root.wm_title("Intellidock")
@@ -52,7 +53,7 @@ def download_data():
 
 def Accuracy(df):
     window = Toplevel(root)      
-    Intellidock_Test_Accuracy(df,window)
+    Intellidock_Test_Accuracy(df,window,barrels,costPerDay)
     
 def Train(df):
     window = Toplevel(root)  
@@ -74,14 +75,20 @@ def Train(df):
 def Predict(df,model,X_test,y_test):
     window = Toplevel(root)  
 
-    Intellidock_Predict_Next_Day(df,model,X_test,y_test,window)
+    Intellidock_Predict_Next_Day(df,model,X_test,y_test,window,barrels,costPerDay)
     
 
 def profit(df):
     window = Toplevel(root)  
 
-    Intellidock_Test_Profitability(df,window)
+    Intellidock_Test_Profitability(df,window,barrels,costPerDay)
     
+    window2 = Toplevel(window)
+    canvas = Canvas(window2, width = 400, height = 300)      
+    canvas.pack()          
+    window2.img = img = PhotoImage(file="Deviation_Histogram.png")  
+
+    canvas.create_image(0,0, anchor=NW, image=img)
 def features():
     window = Toplevel(root)  
     
