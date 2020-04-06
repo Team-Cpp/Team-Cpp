@@ -77,48 +77,48 @@ dataAttr = {
         "yahooPeriod": "1d",
         "dfName": "NatGasPrices",
     },
-    "brent": {
-        "quandlCode": "FRED/DCOILBRENTEU",
-        "yahooCode": "BZ=F",
-        "yahooPeriod": "1d",
-        "dfName": "BrentPrices",
-    },
-    "sp500": {
-        "quandlCode": "",
-        "yahooCode": "^GSPC",
-        "yahooPeriod": "1d",
-        "dfName": "SP500",
-    },
+    # "brent": {
+    #     "quandlCode": "FRED/DCOILBRENTEU",
+    #     "yahooCode": "BZ=F",
+    #     "yahooPeriod": "1d",
+    #     "dfName": "BrentPrices",
+    # },
+    # "sp500": {
+    #     "quandlCode": "",
+    #     "yahooCode": "^GSPC",
+    #     "yahooPeriod": "1d",
+    #     "dfName": "SP500",
+    # },
     "nasdaq": {
         "quandlCode": "",
         "yahooCode": "^IXIC",
         "yahooPeriod": "1d",
         "dfName": "Nasdaq",
-    },
-    "dow": {
-        "quandlCode": "",
-        "yahooCode": "^DJI",
-        "yahooPeriod": "1d",
-        "dfName": "DowJones",
-    },
-    "gold": {
-        "quandlCode": "",
-        "yahooCode": "GC=F",
-        "yahooPeriod": "1d",
-        "dfName": "Gold",
-    },
-    "btc": {
-        "quandlCode": "",
-        "yahooCode": "BTC-USD",
-        "yahooPeriod": "1d",
-        "dfName": "Btc",
-    },
-    "bond": {
-        "quandlCode": "",
-        "yahooCode": "^TNX",
-        "yahooPeriod": "1d",
-        "dfName": "Bond10y",
-    },
+    }
+    # "dow": {
+    #     "quandlCode": "",
+    #     "yahooCode": "^DJI",
+    #     "yahooPeriod": "1d",
+    #     "dfName": "DowJones",
+    # },
+    # "gold": {
+    #     "quandlCode": "",
+    #     "yahooCode": "GC=F",
+    #     "yahooPeriod": "1d",
+    #     "dfName": "Gold",
+    # },
+    # "btc": {
+    #     "quandlCode": "",
+    #     "yahooCode": "BTC-USD",
+    #     "yahooPeriod": "1d",
+    #     "dfName": "Btc",
+    # },
+    # "bond": {
+    #     "quandlCode": "",
+    #     "yahooCode": "^TNX",
+    #     "yahooPeriod": "1d",
+    #     "dfName": "Bond10y",
+    # },
 }
 
 QAPIKEY = "YpAydSEsKoSAfuQ9UKhu"
@@ -138,7 +138,7 @@ params = {
     "batch_size": 20,  # 20<16<10, 25 was a bust
     "epochs": 200,
     "lr": 0.0010000,
-    "time_steps": 60,
+    "time_steps": 50,
 }
 
 INPUT_PATH = PATH + "/LSTM_dev/inputs/"
@@ -154,9 +154,10 @@ stime = time.time()
 modDate = dt.today().date()
 dataDate = modDate - td(days=1)
 
-dataFileName = "inputData_" + str(dataDate) + ".csv"
-modFileName = "LSTM_" + str(modDate) + ".h5"
-scaler_filename = "dataScaler.save"
+dataFileName = "inputData.csv"
+modFileName = "LSTM_model.h5"
+histFileName = "LSTM_history.csv"
+scalerFileName = "dataScaler.save"
 
 
 train_cols = [
@@ -168,6 +169,7 @@ train_cols = [
     "MACD_12_26",
     "Momentum_14",
 ]
+
 inp_size = len(train_cols)
 
 
@@ -683,12 +685,12 @@ focus_features = [
     "Prices",
     "OilProduction",
     "NatGasPrices",
-    "BrentPrices",
-    "SP500",
+    # "BrentPrices",
+    # "SP500",
     "Nasdaq",
-    "DowJones",
-    "Gold",
-    "Bond10y",
+    # "DowJones",
+    # "Gold",
+    # "Bond10y",
     "10dSMA",
     "20dSMA",
     "200dSMA",
@@ -700,7 +702,7 @@ focus_features = [
     "RSI_14",
     "Momentum_14",
     "MACD_12_26",
-    "month",
+    "month"
 ]
 nonShiftFeat = ["Prices", "month"]
 
@@ -772,22 +774,33 @@ def create_model():
     lstm_model.add(LSTM(100, return_sequences=False))
     lstm_model.add(Dropout(0.4))
     lstm_model.add(Dense(20, activation="relu"))
-    lstm_model.add(Dense(1, activation="linear"))
+    lstm_model.add(Dense(1, activation="sigmoid"))
     optimizer = optimizers.RMSprop(lr=params["lr"])
     # optimizer = optimizers.SGD(lr=0.000001, decay=1e-6, momentum=0.9, nesterov=True)
     lstm_model.compile(loss="mean_squared_error", optimizer=optimizer)
     return lstm_model
 
 
-def train_model(df_train, val_split=0.2, numDaysTest=None):
+def train_model(df, val_split=0.1):
+    
     from keras import backend as K
+    idx_col = df[train_cols].columns.get_loc("Prices")
 
+    modeldf = copy.copy(df)
+    modeldf = modeldf[modeldf["Date"] > trainDataDate]
+
+    df_train, df_test = train_test_split(modeldf, train_size=(1-val_split), test_size=val_split, shuffle=False)
+
+    tooManyTests = len(df_test) % BATCH_SIZE
+    df_test = df_test[tooManyTests:]
+
+    tooManyTrains = len(df_train) % BATCH_SIZE
+    df_train = df[tooManyTrains:]
+    
     x = df_train.loc[:, train_cols].values
     sc = MinMaxScaler()
     x_train = sc.fit_transform(x)
-    joblib.dump(sc, os.path.join(OUTPUT_PATH, scaler_filename))
-
-    idx_col = df[train_cols].columns.get_loc("Prices")
+    joblib.dump(sc, os.path.join(OUTPUT_PATH, scalerFileName))
 
     print (
         "Are any NaNs present in train matrix?",
@@ -800,10 +813,17 @@ def train_model(df_train, val_split=0.2, numDaysTest=None):
     x_t = trim_dataset(x_t, BATCH_SIZE)
     y_t = trim_dataset(y_t, BATCH_SIZE)
     print ("Batch trimmed size", x_t.shape, y_t.shape)
+    
+    
+    x_test = sc.transform(df_test.loc[:, train_cols].values)
+    x_temp, y_temp = build_timeseries(x_test, idx_col)
+    x_val = trim_dataset(x_temp, BATCH_SIZE)
+    y_val = trim_dataset(y_temp, BATCH_SIZE)
+    print("Validation size", x_val.shape, y_val.shape)
 
     print ("Building model...")
     print ("checking if GPU available", K.tensorflow_backend._get_available_gpus())
-    print ("Train--Test size", len(df_train), len(df_train) * val_split)
+    print ("Train--Test size", len(df_train), len(df_test))
     model = create_model()
 
     es = EarlyStopping(
@@ -846,11 +866,11 @@ def train_model(df_train, val_split=0.2, numDaysTest=None):
         verbose=2,
         batch_size=BATCH_SIZE,
         shuffle=False,
-        validation_split=val_split,
-        # validation_data=(
-        #     trim_dataset(x_val, BATCH_SIZE),
-        #     trim_dataset(y_val, BATCH_SIZE),
-        # ),
+        # validation_split=val_split,
+        validation_data=(
+            trim_dataset(x_val, BATCH_SIZE),
+            trim_dataset(y_val, BATCH_SIZE),
+        ),
         callbacks=[es, mcp, csv_logger],
     )
 
@@ -860,7 +880,7 @@ def train_model(df_train, val_split=0.2, numDaysTest=None):
     print ("saving model: ", modFileName)
     print ("saving history: " + "")
 
-    hist_df.to_csv(OUTPUT_PATH + "history" + modFileName)
+    hist_df.to_csv(OUTPUT_PATH + "model_history.csv")
 
     pickle.dump(model, open(OUTPUT_PATH + modFileName, "wb"))
 
@@ -876,24 +896,35 @@ def test_train_loss(history):
     plt.xlabel("Epoch")
     plt.legend(["Train", "Test"], loc="upper left")
     plt.show()
-    plt.savefig(os.path.join(OUTPUT_PATH, "train_vis_BS_" + str(BATCH_SIZE) + ".png"))
+    plt.savefig(os.path.join(OUTPUT_PATH, "train_vis_BS_" + ".png"))
 
 
-def visualise_prediction(data, pred):
+def visualise_prediction(df, numDaysAgo, numDaysUntil):
+    pred_df = copy.copy(df)
+    # df_test = df_test[train_cols]
+    pred_df = pred_df[-(numDaysAgo + TIME_STEPS) : -numDaysUntil]
+    preds = []
+    for i in range(numDaysUntil - numDaysAgo):
+        pred_val = predict_new(weights, sc, pred_df[i : (TIME_STEPS + i)])
+        preds.append(pred_val)
+
     plt.figure()
-    plt.plot(pred)
-    plt.plot(data)
+    plt.plot(preds)
+    plt.plot(pred_df["Prices"].values)
     plt.title("Prediction vs Real Stock Price")
     plt.ylabel("Price")
     plt.xlabel("Days")
     plt.legend(["Prediction", "Real"], loc="upper left")
     plt.show()
     plt.savefig(
-        os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + "_" + time.ctime() + ".png",)
+        os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + "_" + ".png")
     )
 
 
-def predict_new(weights, sc, df, days=1):
+def predict_new(weights, df, days=1):
+    sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
+    idx_col = df[train_cols].columns.get_loc("Prices")
+
     if len(df) < TIME_STEPS:
         raise Exception(
             "To make a prediciton for any following day, {} previous datapoints are required".format(
@@ -921,6 +952,121 @@ def predict_new(weights, sc, df, days=1):
         )
     return pred_org
 
+
+def getLstmData():
+    print ("Querying data and building dataframe...")
+    df = getData(dataAttr["wti"], quand=True, yahoo=True)
+
+    # # Getting Oil production data and combining dataframes
+    oilDF = oilProduction()
+    df = combineFrames(df, oilDF)
+    df = df[np.isfinite(df["Prices"])]
+    df = df.reset_index().drop(["index"], axis=1)
+
+    for i, attr in enumerate(dataAttr):
+        if i == 0:
+            continue
+
+        else:
+            q = False
+            y = False
+
+            if dataAttr[attr]["quandlCode"]:
+                q = True
+
+            if dataAttr[attr]["yahooCode"]:
+                y = True
+
+            newData = getData(dataAttr[attr], quand=q, yahoo=y)
+            df = pd.merge(df, newData, on=["Date"], how="left")
+            df[dataAttr[attr]["dfName"]] = df[dataAttr[attr]["dfName"]].interpolate(
+                method="nearest"
+            )
+
+    if (df["Prices"] <= 0.1).any():
+        for i, row in df.tail(100).iterrows():
+            price = row["Prices"]
+            if price == 0 or price < 0.01:
+                key = dataAttr["wti"]
+                yfStartDate = df["Date"][i]
+                stocks = key["yahooCode"]
+                Stocks, yfInfo = yFinData(
+                    yfStartDate, stock=stocks, name=key["dfName"]
+                )
+                missingData = Stocks
+                df["Prices"][i] = missingData["Prices"][0]
+
+    smas = {"5dSMA": 5, "10dSMA": 10, "20dSMA": 20, "50dSMA": 50, "200dSMA": 200}
+
+    # Calculating the technical indicators for price data
+    df = df.reset_index().drop(["index"], axis=1)
+    df = df.sort_values(by=["Date"])
+
+    for sma in smas:
+        df[sma] = SMA(smas[sma], df["Prices"])
+        df[sma] = pd.to_numeric(df[sma])
+
+    df["boll_lo"] = bollinger(df["Prices"])[0]
+    df["boll_hi"] = bollinger(df["Prices"])[1]
+
+    df = momentum(df, 14)
+    df = macd(df, 12, 26)
+    df = rate_of_change(df, 14)
+    df = relative_strength_index(df)
+
+    df["boll_hi"] = pd.to_numeric(df["boll_hi"])
+    df["boll_lo"] = pd.to_numeric(df["boll_lo"])
+
+    i = 0
+    j = 0
+    for sma in smas:
+        title = "daysAbove" + sma
+        df[title] = float("NaN")
+        for price, val, pos in zip(df["Prices"], df[sma], range(len(df))):
+            if price > val:
+                j = 0
+                i += 1
+                df[title].iloc[pos] = i
+
+            elif val > price:
+                i = 0
+                j -= 1
+                df[title].iloc[pos] = j
+
+            else:
+                i = 0
+                j = 0
+                df[title].iloc[pos] = 0
+
+    df["bollAmplitude"] = df["boll_hi"] - df["boll_lo"]
+    df["distFromTopBoll"] = df["boll_hi"] - df["Prices"]
+    df["distFromLowBoll"] = df["boll_lo"] - df["Prices"]
+    df["20d200dDist"] = np.abs(df["20dSMA"] - df["200dSMA"])
+
+    df = df[np.isfinite(df["200dSMA"])]
+    df = df.rename(columns={"Production of Crude Oil": "OilProduction"})
+    df = df.drop_duplicates("Date", keep="first")
+    df = df[np.isfinite(df["Prices"])]
+    df = df.reset_index().drop(["index"], axis=1)
+
+    """
+    Creating time series features from datetime index
+    """
+
+    df["dayofweek"] = df["Date"].dt.dayofweek
+    df["quarter"] = df["Date"].dt.quarter
+    df["month"] = df["Date"].dt.month
+    df["year"] = df["Date"].dt.year
+    df["dayofyear"] = df["Date"].dt.dayofyear
+    df["dayofmonth"] = df["Date"].dt.day
+    df["weekofyear"] = df["Date"].dt.weekofyear
+    df = df.sort_values(by="Date")
+    df = df[df["Date"] > trainDataDate]
+    df = df.reset_index().drop(["index"], axis=1)
+
+    print ("Saving dataframe to file ", dataFileName, "at ", INPUT_PATH)
+    df.to_csv(INPUT_PATH + dataFileName)
+    return df
 
 while True:
     quit = False
@@ -976,120 +1122,7 @@ while True:
             updateData = True
 
     if updateData is True:
-        print ("Querying data and building dataframe...")
-        df = getData(dataAttr["wti"], quand=True, yahoo=True)
-
-        # # Getting Oil production data and combining dataframes
-        oilDF = oilProduction()
-        df = combineFrames(df, oilDF)
-        df = df[np.isfinite(df["Prices"])]
-        df = df.reset_index().drop(["index"], axis=1)
-
-        for i, attr in enumerate(dataAttr):
-            if i == 0:
-                continue
-
-            else:
-                q = False
-                y = False
-
-                if dataAttr[attr]["quandlCode"]:
-                    q = True
-
-                if dataAttr[attr]["yahooCode"]:
-                    y = True
-
-                newData = getData(dataAttr[attr], quand=q, yahoo=y)
-                df = pd.merge(df, newData, on=["Date"], how="left")
-                df[dataAttr[attr]["dfName"]] = df[dataAttr[attr]["dfName"]].interpolate(
-                    method="nearest"
-                )
-
-        if (df["Prices"] <= 0.1).any():
-            for i, row in df.tail(100).iterrows():
-                price = row["Prices"]
-                if price == 0 or price < 0.01:
-                    key = dataAttr["wti"]
-                    yfStartDate = df["Date"][i]
-                    stocks = key["yahooCode"]
-                    Stocks, yfInfo = yFinData(
-                        yfStartDate, stock=stocks, name=key["dfName"]
-                    )
-                    missingData = Stocks
-                    df["Prices"][i] = missingData["Prices"][0]
-
-        smas = {"5dSMA": 5, "10dSMA": 10, "20dSMA": 20, "50dSMA": 50, "200dSMA": 200}
-
-        # Calculating the technical indicators for price data
-        df = df.reset_index().drop(["index"], axis=1)
-        df = df.sort_values(by=["Date"])
-
-        for sma in smas:
-            df[sma] = SMA(smas[sma], df["Prices"])
-            df[sma] = pd.to_numeric(df[sma])
-
-        df["boll_lo"] = bollinger(df["Prices"])[0]
-        df["boll_hi"] = bollinger(df["Prices"])[1]
-
-        df = momentum(df, 14)
-        df = macd(df, 12, 26)
-        df = rate_of_change(df, 14)
-        df = relative_strength_index(df)
-
-        df["boll_hi"] = pd.to_numeric(df["boll_hi"])
-        df["boll_lo"] = pd.to_numeric(df["boll_lo"])
-
-        i = 0
-        j = 0
-        for sma in smas:
-            title = "daysAbove" + sma
-            df[title] = float("NaN")
-            for price, val, pos in zip(df["Prices"], df[sma], range(len(df))):
-                if price > val:
-                    j = 0
-                    i += 1
-                    df[title].iloc[pos] = i
-
-                elif val > price:
-                    i = 0
-                    j -= 1
-                    df[title].iloc[pos] = j
-
-                else:
-                    i = 0
-                    j = 0
-                    df[title].iloc[pos] = 0
-
-        df["bollAmplitude"] = df["boll_hi"] - df["boll_lo"]
-        df["distFromTopBoll"] = df["boll_hi"] - df["Prices"]
-        df["distFromLowBoll"] = df["boll_lo"] - df["Prices"]
-        df["20d200dDist"] = np.abs(df["20dSMA"] - df["200dSMA"])
-
-        df = df[np.isfinite(df["200dSMA"])]
-        df = df.rename(columns={"Production of Crude Oil": "OilProduction"})
-        df = df.drop_duplicates("Date", keep="first")
-        df = df[np.isfinite(df["Prices"])]
-        df = df.reset_index().drop(["index"], axis=1)
-
-        """
-        Creating time series features from datetime index
-        """
-
-        df["dayofweek"] = df["Date"].dt.dayofweek
-        df["quarter"] = df["Date"].dt.quarter
-        df["month"] = df["Date"].dt.month
-        df["year"] = df["Date"].dt.year
-        df["dayofyear"] = df["Date"].dt.dayofyear
-        df["dayofmonth"] = df["Date"].dt.day
-        df["weekofyear"] = df["Date"].dt.weekofyear
-        df = df.sort_values(by="Date")
-        df = df[df["Date"] > trainDataDate]
-        df = df.reset_index().drop(["index"], axis=1)
-
-        print ("Saving dataframe to file ", dataFileName, "at ", INPUT_PATH)
-        df.to_csv(INPUT_PATH + dataFileName)
-
-    idx_col = df[train_cols].columns.get_loc("Prices")
+        df = getLstmData()
 
     if trained is True:
         
@@ -1108,11 +1141,11 @@ while True:
         
         if choice == 0:
             try:
-                model = load_model(os.path.join(OUTPUT_PATH, modFileName))
-                history = pd.read_csv(OUTPUT_PATH + "history" + modFileName)
-                sc = joblib.load(os.path.join(OUTPUT_PATH, scaler_filename))
-                weights = model.get_weights()
 
+                model = load_model(os.path.join(OUTPUT_PATH, modFileName))
+                history = pd.read_csv(os.path.join(OUTPUT_PATH, histFileName))
+                sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
+                weights = model.get_weights()
                 print ("Loaded saved model...")
 
             except (FileNotFoundError,OSError):
@@ -1120,58 +1153,10 @@ while True:
                 choice = 1
 
         if choice == 1:
-            numDaysTest = None
-            print ("Training new model!")
-            print ("Do you want to leave some data for testing (Y/N)?")
-            while True:
-                try:
-                    testingdata = str(input()).upper()
-                    if testingdata not in ("Y", "N"):
-                        raise (ValueError)
-                    else:
-                        break
 
-                except (ValueError):
-                    print ("Please enter a positive integer for number of days!")
 
-            if testingdata == "Y":
-                print ("How many past days price action do you want to test the model on?")
-                while True:
-                    try:
-                        numDaysTest = int(input("Enter an integer number of days: "))
-                        if numDaysTest < 0:
-                            raise (ValueError)
-                    except (ValueError):
-                        print ("Please enter a positive integer for number of days!")
-
-            df_train = copy.copy(df)
-
-            df_train = df_train[df_train["Date"] > trainDataDate]
-            # df_train = df_train[train_cols]
-            df_test = []
-
-            if numDaysTest:
-                df_test = copy.copy(df)
-                # df_test = df_test[train_cols]
-                df_test = df_test[-numDaysTest:]
-
-                df_train = df_train[:-numDaysTest]
-
-                tooManyTests = len(df_test % BATCH_SIZE)
-                df_test = df_test[tooManyTests:]
-
-                x_test = sc.transform(df_test.loc[:, train_cols])
-                x_temp, y_temp = build_timeseries(x_test, idx_col)
-                x_test_t = trim_dataset(x_temp, BATCH_SIZE)
-                y_test_t = trim_dataset(y_temp, BATCH_SIZE)
-                print ("Test size", x_test_t.shape, y_test_t.shape)
-
-            tooManyTrains = len(df_train) % BATCH_SIZE
-            df_train = df[tooManyTrains:]
-
-            print ("Train--Test size", len(df_train), len(df_test))
-
-            model, history, weights = train_model(df_train)
+            model, history, weights = train_model(df)
+            model_trained = True
         else:
             continue
 
@@ -1217,15 +1202,7 @@ while True:
             except (ValueError):
                 print ("This must be later than the prediction start date!")
 
-        pred_df = copy.copy(df)
-        # df_test = df_test[train_cols]
-        pred_df = pred_df[-(numDaysAgo + TIME_STEPS) : -numDaysUntil]
-        preds = []
-        for i in range(numDaysUntil - numDaysAgo):
-            pred_val = predict_new(weights, sc, pred_df[i : (TIME_STEPS + i)])
-            preds.append(pred_val)
-
-        visualise_prediction(preds, pred_df["Prices"].values)
+        visualise_prediction(df, numDaysAgo, numDaysUntil)
 
     if archi:
         plot_model(model.model, to_file=os.path.join(OUTPUT_PATH, "model.png"))
