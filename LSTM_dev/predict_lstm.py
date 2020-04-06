@@ -893,6 +893,7 @@ def train_model(df, val_split=0.2):
 
 
 def test_train_loss(history):
+    plt.style.use("fivethirtyeight")
     plt.figure()
     plt.plot(history["loss"])
     plt.plot(history["val_loss"])
@@ -912,10 +913,14 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
     for i in range(numDaysAgo - numDaysUntil + 1):
         pred_val = predict_new(weights, pred_df[i : (TIME_STEPS + i)])
         preds.append(pred_val[0][0])
+        
+    real_vals = pred_df["Prices"].values
+    real_vals = real_vals[-numDaysAgo:-numDaysUntil]
 
+    plt.style.use("fivethirtyeight")
     plt.figure()
     plt.plot(preds)
-    plt.plot(pred_df["Prices"].values)
+    plt.plot(real_vals)
     plt.title("Prediction vs Real Stock Price")
     plt.ylabel("Price")
     plt.xlabel("Days")
