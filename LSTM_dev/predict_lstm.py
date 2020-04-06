@@ -5,6 +5,7 @@ PATH = os.environ["DF_ROOT"]
 sys.path.insert(1, PATH)
 
 import warnings
+
 warnings.filterwarnings("ignore")
 import requests
 import time
@@ -53,6 +54,7 @@ from keras.layers import Dense
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, CSVLogger
 from keras.wrappers.scikit_learn import KerasClassifier
+from keras.utils import plot_model
 
 
 """
@@ -177,16 +179,16 @@ inp_size = len(train_cols)
 # check if directory already exists
 if not os.path.exists(OUTPUT_PATH):
     os.makedirs(OUTPUT_PATH)
-    print ("Directory created", OUTPUT_PATH)
+    print("Directory created", OUTPUT_PATH)
 
 else:
-    print ("Directory " + OUTPUT_PATH + " already exists.")
+    print("Directory " + OUTPUT_PATH + " already exists.")
 
 if not os.path.exists(INPUT_PATH):
     os.makedirs(INPUT_PATH)
-    print ("Directory created", INPUT_PATH)
+    print("Directory created", INPUT_PATH)
 else:
-    print ("Directory " + INPUT_PATH + " already exists.")
+    print("Directory " + INPUT_PATH + " already exists.")
 
 
 def yFinData(
@@ -458,13 +460,13 @@ def build_timeseries(mat, y_col_index):
     dim_1 = mat.shape[1]
     x = np.zeros((dim_0, TIME_STEPS, dim_1))
     y = np.zeros((dim_0,))
-    print ("dim_0", dim_0)
+    print("dim_0", dim_0)
     for i in range(dim_0):
         x[i] = mat[i : TIME_STEPS + i]
         y[i] = mat[TIME_STEPS + i, y_col_index]
     #         if i < 10:
     #           print(i,"-->", x[i,-1,:], y[i])
-    print ("length of time-series i/o", x.shape, y.shape)
+    print("length of time-series i/o", x.shape, y.shape)
     return x, y
 
 
@@ -647,7 +649,6 @@ def plot2axis(
 
 def plot_data(df, variables=train_cols, days=60):
     variables.remove("Prices")
-    print (var)
     days = days
     dates = df["Date"][-days:].astype("O")
     prices = df["Prices"][-days:]
@@ -655,6 +656,8 @@ def plot_data(df, variables=train_cols, days=60):
     lowBand = df["boll_lo"][-days:]
     bollName = "20d Bollinger Bands"
     for var in variables:
+        print(var)
+
         plot2axis(
             x=pd.to_datetime(dates),
             y1=prices,
@@ -702,7 +705,7 @@ focus_features = [
     "RSI_14",
     "Momentum_14",
     "MACD_12_26",
-    "month"
+    "month",
 ]
 nonShiftFeat = ["Prices", "month"]
 
@@ -740,7 +743,7 @@ def plot_correlations(df, features=focus_features, nonShiftFeats=nonShiftFeat):
     plt.savefig(
         os.path.join(OUTPUT_PATH, "mainFeatureCorrelations.png"), dpi=300, format="png"
     )
-    print (corr)
+    print(corr)
     return corr
 
 
@@ -755,13 +758,13 @@ def trim_dataset(mat, batch_size):
         return mat
 
 
-def create_model():
+def create_model(batch_size=BATCH_SIZE):
     lstm_model = Sequential()
     # (batch_size, timesteps, data_dim)
     lstm_model.add(
         LSTM(
             128,
-            batch_input_shape=(BATCH_SIZE, TIME_STEPS, inp_size),
+            batch_input_shape=(batch_size, TIME_STEPS, inp_size),
             dropout=0.0,
             recurrent_dropout=0.0,
             stateful=False,
@@ -781,49 +784,51 @@ def create_model():
     return lstm_model
 
 
-def train_model(df, val_split=0.1):
-    
+def train_model(df, val_split=0.2):
+
     from keras import backend as K
+
     idx_col = df[train_cols].columns.get_loc("Prices")
 
     modeldf = copy.copy(df)
     modeldf = modeldf[modeldf["Date"] > trainDataDate]
 
-    df_train, df_test = train_test_split(modeldf, train_size=(1-val_split), test_size=val_split, shuffle=False)
+    df_train, df_test = train_test_split(
+        modeldf, train_size=(1 - val_split), test_size=val_split, shuffle=False
+    )
 
-    tooManyTests = len(df_test) % BATCH_SIZE
+    tooManyTests = len(df_test) % (BATCH_SIZE + TIME_STEPS)
     df_test = df_test[tooManyTests:]
 
-    tooManyTrains = len(df_train) % BATCH_SIZE
+    tooManyTrains = len(df_train) % (BATCH_SIZE + TIME_STEPS)
     df_train = df[tooManyTrains:]
-    
+
     x = df_train.loc[:, train_cols].values
     sc = MinMaxScaler()
     x_train = sc.fit_transform(x)
     joblib.dump(sc, os.path.join(OUTPUT_PATH, scalerFileName))
 
-    print (
+    print(
         "Are any NaNs present in train matrix?",
         np.isnan(x_train).any(),
         # np.isnan(x_test).any(),
     )
 
-    print ("Are any NaNs present in train matrix?", np.isnan(x_train).any())
+    print("Are any NaNs present in train matrix?", np.isnan(x_train).any())
     x_t, y_t = build_timeseries(x_train, idx_col)
     x_t = trim_dataset(x_t, BATCH_SIZE)
     y_t = trim_dataset(y_t, BATCH_SIZE)
-    print ("Batch trimmed size", x_t.shape, y_t.shape)
-    
-    
+    print("Batch trimmed size", x_t.shape, y_t.shape)
+
     x_test = sc.transform(df_test.loc[:, train_cols].values)
     x_temp, y_temp = build_timeseries(x_test, idx_col)
     x_val = trim_dataset(x_temp, BATCH_SIZE)
     y_val = trim_dataset(y_temp, BATCH_SIZE)
     print("Validation size", x_val.shape, y_val.shape)
 
-    print ("Building model...")
-    print ("checking if GPU available", K.tensorflow_backend._get_available_gpus())
-    print ("Train--Test size", len(df_train), len(df_test))
+    print("Building model...")
+    print("checking if GPU available", K.tensorflow_backend._get_available_gpus())
+    print("Train--Test size", len(df_train), len(df_test))
     model = create_model()
 
     es = EarlyStopping(
@@ -877,12 +882,12 @@ def train_model(df, val_split=0.1):
     hist_df = pd.DataFrame(history.history)
     model.reset_states()
     weights = model.get_weights()
-    print ("saving model: ", modFileName)
-    print ("saving history: " + "")
+    print("saving model: ", modFileName)
+    print("saving history: " + "")
 
     hist_df.to_csv(OUTPUT_PATH + "model_history.csv")
-
-    pickle.dump(model, open(OUTPUT_PATH + modFileName, "wb"))
+    model.save(os.path.join(OUTPUT_PATH, modFileName))
+    # pickle.dump(model, open(, "wb"))
 
     return model, hist_df, weights
 
@@ -904,9 +909,9 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
     # df_test = df_test[train_cols]
     pred_df = pred_df[-(numDaysAgo + TIME_STEPS) : -numDaysUntil]
     preds = []
-    for i in range(numDaysUntil - numDaysAgo):
-        pred_val = predict_new(weights, sc, pred_df[i : (TIME_STEPS + i)])
-        preds.append(pred_val)
+    for i in range(numDaysAgo - numDaysUntil + 1):
+        pred_val = predict_new(weights, pred_df[i : (TIME_STEPS + i)])
+        preds.append(pred_val[0][0])
 
     plt.figure()
     plt.plot(preds)
@@ -916,12 +921,11 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
     plt.xlabel("Days")
     plt.legend(["Prediction", "Real"], loc="upper left")
     plt.show()
-    plt.savefig(
-        os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + "_" + ".png")
-    )
+    plt.savefig(os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + "_" + ".png"))
 
 
 def predict_new(weights, df, days=1):
+
     sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
     idx_col = df[train_cols].columns.get_loc("Prices")
 
@@ -931,21 +935,20 @@ def predict_new(weights, df, days=1):
                 TIME_STEPS
             )
         )
-    new_model = create_model()
+    new_model = create_model(batch_size=days)
     new_model.set_weights(weights)
     data_for_pred = copy.copy(df)
     data_for_pred = data_for_pred[train_cols][-TIME_STEPS:]
     x_for_pred = sc.transform(data_for_pred.loc[:, train_cols].values)
-    idx_col = df[train_cols].columns.get_loc("Prices")
 
     pred = new_model.predict(
         x_for_pred.reshape(days, TIME_STEPS, inp_size), batch_size=days
     )
-    pred_org = (new_pred * sc.data_range_[idx_col]) + sc.data_min_[idx_col]
+    pred_org = (pred * sc.data_range_[idx_col]) + sc.data_min_[idx_col]
     if days == 1:
-        print ("The price prediction for tomorrow is {:.3f}".format(pred_org[0][0]))
+        print("The price prediction for tomorrow is {:.3f}".format(pred_org[0][0]))
     else:
-        print (
+        print(
             "The price predictions for the following {:.0f} days are {}".format(
                 days, pred_org
             )
@@ -954,7 +957,7 @@ def predict_new(weights, df, days=1):
 
 
 def getLstmData():
-    print ("Querying data and building dataframe...")
+    print("Querying data and building dataframe...")
     df = getData(dataAttr["wti"], quand=True, yahoo=True)
 
     # # Getting Oil production data and combining dataframes
@@ -990,9 +993,7 @@ def getLstmData():
                 key = dataAttr["wti"]
                 yfStartDate = df["Date"][i]
                 stocks = key["yahooCode"]
-                Stocks, yfInfo = yFinData(
-                    yfStartDate, stock=stocks, name=key["dfName"]
-                )
+                Stocks, yfInfo = yFinData(yfStartDate, stock=stocks, name=key["dfName"])
                 missingData = Stocks
                 df["Prices"][i] = missingData["Prices"][0]
 
@@ -1064,9 +1065,10 @@ def getLstmData():
     df = df[df["Date"] > trainDataDate]
     df = df.reset_index().drop(["index"], axis=1)
 
-    print ("Saving dataframe to file ", dataFileName, "at ", INPUT_PATH)
+    print("Saving dataframe to file ", dataFileName, "at ", INPUT_PATH)
     df.to_csv(INPUT_PATH + dataFileName)
     return df
+
 
 while True:
     quit = False
@@ -1088,7 +1090,7 @@ while True:
             )
             break
         except (ValueError):
-            print ("Invalid input, please select one of the possible integers!")
+            print("Invalid input, please select one of the possible integers!")
 
     if option == 0:
         break
@@ -1114,31 +1116,31 @@ while True:
     if updateData is False:
         try:
             df = pd.read_csv(INPUT_PATH + dataFileName)
-            print ("Loaded data file " + dataFileName + " ...")
+            print("Loaded data file " + dataFileName + " ...")
             updateData = False
 
         except FileNotFoundError:
-            print ("Data file not found")
+            print("Data file not found")
             updateData = True
 
     if updateData is True:
         df = getLstmData()
 
     if trained is True:
-        
+
         choice = None
-        print("\n 0: Load existing model \n 1: Train new model ")
+        print("\n 0: Load existing model \n 1: Train new model \n")
         while True:
             try:
-                choice = int(input(": "))
+                choice = int(input(":"))
                 if choice != 0 and choice != 1:
-                    raise(ValueError)
+                    raise (ValueError)
                 else:
                     break
-                
-            except(ValueError):
+
+            except (ValueError):
                 print("Choose an acceptable option!")
-        
+
         if choice == 0:
             try:
 
@@ -1146,14 +1148,13 @@ while True:
                 history = pd.read_csv(os.path.join(OUTPUT_PATH, histFileName))
                 sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
                 weights = model.get_weights()
-                print ("Loaded saved model...")
+                print("Loaded saved model...")
 
-            except (FileNotFoundError,OSError):
-                print ("Model not found")
+            except (FileNotFoundError, OSError):
+                print("Model not found")
                 choice = 1
 
         if choice == 1:
-
 
             model, history, weights = train_model(df)
             model_trained = True
@@ -1161,7 +1162,7 @@ while True:
             continue
 
     if predicc:
-        predict_new(weights, sc, df)
+        predict_new(weights, df)
 
     if correls:
         plot_correlations(df)
@@ -1175,7 +1176,7 @@ while True:
     if pricevs:
         numDaysAgo = 0
         numDaysUntil = 0
-        print (
+        print(
             "Please enter the timeframe for which you wish to compare prediction and real price"
         )
         while True:
@@ -1185,8 +1186,10 @@ while True:
                 )
                 if numDaysAgo < 0:
                     raise (ValueError)
+                else:
+                    break
             except (ValueError):
-                print ("Please enter a positive integer for number of days!")
+                print("Please enter a positive integer for number of days!")
 
         while True:
             try:
@@ -1195,12 +1198,14 @@ while True:
                         "Enter until how many days ago you want the prediction to end: "
                     )
                 )
-                if numDaysUntil < numDaysAgo:
+                numDaysUntil += 1
+                if numDaysUntil > numDaysAgo:
                     raise (ValueError)
-                if numDaysUntil == 0:
-                    numDaysUntil = 1
+                else:
+                    break
+
             except (ValueError):
-                print ("This must be later than the prediction start date!")
+                print("This must be later than the prediction start date!")
 
         visualise_prediction(df, numDaysAgo, numDaysUntil)
 
