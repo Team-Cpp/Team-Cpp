@@ -28,10 +28,28 @@ fi
 chkpypkg xgboost
 chkpypkg sklearn
 chkpypkg numpy
+chkpypkg pandas
 chkpypkg pickle
 chkpypkg tkinter
-chkpypkg click
+chkpypkg yfinance
+chkpypkg quandl
+chkpypkg math
+chkpypkg csv
+chkpypkg shutil
+chkpypkg copy
+chkpypkg time
+chkpypkg datetime
+chkpypkg requests
+chkpypkg warnings
+chkpypkg logging
+chkpypkg joblib
+chkpypkg scipy
+chkpypkg h5py
 chkpypkg future
+chkpypkg matplotlib
+chkpypkg seaborn
+chkpypkg tensorflow
+chkpypkg keras
 
 (( ${#missing_pypkg[@]} > 0 )) &&  return 1
 unset missing_pypkg
