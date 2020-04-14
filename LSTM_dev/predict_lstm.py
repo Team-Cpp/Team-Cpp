@@ -901,9 +901,9 @@ def test_train_loss(history):
     plt.ylabel("Loss")
     plt.xlabel("Epoch")
     plt.legend(["Train", "Test"], loc="upper left")
-    plt.show()
-    plt.savefig(os.path.join(OUTPUT_PATH, "train_vis_BS_" + ".png"))
 
+    plt.savefig(os.path.join(OUTPUT_PATH, "train_vis_BS_" + ".png"))
+    plt.show()
 
 def visualise_prediction(df, numDaysAgo, numDaysUntil):
     pred_df = copy.copy(df)
@@ -925,9 +925,9 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
     plt.ylabel("Price")
     plt.xlabel("Days")
     plt.legend(["Prediction", "Real"], loc="upper left")
-    plt.show()
-    plt.savefig(os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + "_" + ".png"))
 
+    plt.savefig(os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + ".png"))
+    plt.show()
 
 def predict_new(weights, df, days=1):
 
