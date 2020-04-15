@@ -55,7 +55,7 @@ from keras import optimizers
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, CSVLogger
 from keras.wrappers.scikit_learn import KerasClassifier
 from keras.utils import plot_model
-
+import multiprocessing
 
 """
 Data Attributes
@@ -132,12 +132,12 @@ costPerDay = 30000
 daysToPredict = 1
 
 # Data split for training and testing.
-trainDataDate = "2010-01-01"
+trainDataDate = "2009-06-01"
 testSplitDate = "2020-04-01"
 
 # Parameters for the model.
 params = {
-    "batch_size": 20,  # 20<16<10, 25 was a bust
+    "batch_size": 16,  # 20<16<10, 25 was a bust
     "epochs": 200,
     "lr": 0.0010000,
     "time_steps": 50,
@@ -751,6 +751,7 @@ def trim_dataset(mat, batch_size):
     """
     trims dataset to a size that's divisible by BATCH_SIZE
     """
+    print (mat.shape)
     no_of_rows_drop = mat.shape[0] % batch_size
     if no_of_rows_drop > 0:
         return mat[:-no_of_rows_drop]
@@ -784,7 +785,7 @@ def create_model(batch_size=BATCH_SIZE):
     return lstm_model
 
 
-def train_model(df, val_split=0.2):
+def train_model(df, val_split=0.1):
 
     from keras import backend as K
 
@@ -797,11 +798,11 @@ def train_model(df, val_split=0.2):
         modeldf, train_size=(1 - val_split), test_size=val_split, shuffle=False
     )
 
-    tooManyTests = len(df_test) % (BATCH_SIZE + TIME_STEPS)
+    tooManyTests = len(df_test) % (BATCH_SIZE )#+ TIME_STEPS)
     df_test = df_test[tooManyTests:]
 
-    tooManyTrains = len(df_train) % (BATCH_SIZE + TIME_STEPS)
-    df_train = df[tooManyTrains:]
+    tooManyTrains = len(df_train) % (BATCH_SIZE )#+ TIME_STEPS)
+    df_train = df_train[tooManyTrains:]
 
     x = df_train.loc[:, train_cols].values
     sc = MinMaxScaler()
@@ -871,6 +872,8 @@ def train_model(df, val_split=0.2):
         verbose=2,
         batch_size=BATCH_SIZE,
         shuffle=False,
+        use_multiprocessing=True, 
+        # workers=multiprocessing.cpu_count() - 1,
         # validation_split=val_split,
         validation_data=(
             trim_dataset(x_val, BATCH_SIZE),
