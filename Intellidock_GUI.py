@@ -3,7 +3,7 @@ from tkinter import *
 
 import os
 import sys
-sys.path.insert(1,os.environ['DF_ROOT'])
+#sys.path.insert(0,os.environ['DF_ROOT'])
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -89,18 +89,15 @@ def profit(df):
     window2.img = img = PhotoImage(file="Deviation_Histogram.png")  
 
     canvas.create_image(0,0, anchor=NW, image=img)
+
 def features():
     window = Toplevel(root)  
     
-    canvas = Canvas(window, width = 600, height = 700)      
+    canvas = Canvas(window, width = 1000, height = 800)      
     canvas.pack()          
     window.img = img = PhotoImage(file="Decision_Tree.png")  
 
     canvas.create_image(0,0, anchor=NW, image=img)
-
-    
-
-
 
      
 btn = Button(root, text="Download Data",bg = 'green',command = download_data,font = ('Arial',30))

@@ -32,7 +32,7 @@ Created on Thu Feb  6 13:08:49 2020
 
 import os
 import sys
-sys.path.insert(1,os.environ['DF_ROOT'])
+#sys.path.insert(1,os.environ['DF_ROOT'])
 
 import pandas as pd
 print(pd.__file__)
@@ -80,21 +80,21 @@ def create_features(df, label=None, shift = 0):
     """
     Creates time series features from datetime index
     """
-    df['dayofweek'] = df['Date'].dt.dayofweek
-    df['quarter'] = df['Date'].dt.quarter
-    df['month'] = df['Date'].dt.month
-    df['year'] = df['Date'].dt.year
-    df['dayofyear'] = df['Date'].dt.dayofyear
-    df['dayofmonth'] = df['Date'].dt.day
-    df['weekofyear'] = df['Date'].dt.weekofyear
+    df['Day of the week'] = df['Date'].dt.dayofweek
+    df['Quarter'] = df['Date'].dt.quarter
+    df['Month'] = df['Date'].dt.month
+    df['Year'] = df['Date'].dt.year
+    df['Day of the year'] = df['Date'].dt.dayofyear
+    df['Day of the month'] = df['Date'].dt.day
+    df['Week of the year'] = df['Date'].dt.weekofyear
     df = df.set_index('Date')
     #X = df[['OilProduction', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26', 'ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist','dayofyear','dayofmonth','weekofyear']]
 
-    X = df[['OilProduction', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26', 'ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist','dayofyear','dayofmonth','weekofyear']]
+    X = df[['OilProduction', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26', 'ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference','Day of the year','Day of the month','Week of the year']]
     if shift > 0:
-        tiems = X[['dayofyear','dayofmonth','weekofyear']]
+        tiems = X[['Day of the year','Day of the month','Week of the year']]
         #X = X[['OilProduction', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26','ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist']].shift(shift)
-        X = X[['OilProduction', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26','ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist']].shift(shift)
+        X = X[['OilProduction', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26','ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference']].shift(shift)
         X = X.merge(tiems, how='inner', left_index=True, right_index=True)
 
     if label:
@@ -291,7 +291,7 @@ def Intellidock_Get_Data():
     print("Acquiring Data...")
     QAPIKEY = 'YpAydSEsKoSAfuQ9UKhu'
     quandl.ApiConfig.api_key = QAPIKEY
-    wtiData = quandl.get("FRED/DCOILWTICO")
+    wtiData = quandl.get("FRED/DCOILWTICO")#Crude Oil Prices: Brent - Europe
 
     wtiData.reset_index(level=0, inplace=True)
     wtiData = wtiData.rename(columns={"Value": "Prices"})
@@ -308,7 +308,7 @@ def Intellidock_Get_Data():
     wtiData = wtiData.sort_values(by = ["Date"])
 
 
-    oilDF = dataFun.oilProduction()
+    oilDF = dataFun.oilProduction() #US Field Production of Crude Oil
 
     df = dataFun.combineFrames(wtiData,oilDF)
     df = df[np.isfinite(df['Prices'])]
@@ -355,36 +355,36 @@ def Intellidock_Get_Data():
     #df.isna().sum()
 
     df = df.reset_index().drop(["index"], axis = 1)
-    df["20dSMA"] = dataFun.SMA(20, df["Prices"])
-    df["10dSMA"] = dataFun.SMA(10, df["Prices"])
-    df["5dSMA"] = dataFun.SMA(5, df["Prices"])
-    df["50dSMA"] = dataFun.SMA(50, df["Prices"])
-    df["200dSMA"] = dataFun.SMA(200, df["Prices"])
+    df["20 day Simple Moving Average"] = dataFun.SMA(20, df["Prices"])
+    df["10 day Simple Moving Average"] = dataFun.SMA(10, df["Prices"])
+    df["5 day Simple Moving Average"] = dataFun.SMA(5, df["Prices"])
+    df["50 day Simple Moving Average"] = dataFun.SMA(50, df["Prices"])
+    df["200 day Simple Moving Average"] = dataFun.SMA(200, df["Prices"])
 
 
-    df["boll_lo"] = dataFun.bollinger(df['Prices'])[0]
-    df["boll_hi"] = dataFun.bollinger(df['Prices'])[1]
+    df["Bollinger band low"] = dataFun.bollinger(df['Prices'])[0]
+    df["Bollinger band high"] = dataFun.bollinger(df['Prices'])[1]
 
-    df = dataFun.momentum(df, 14)
-    df = dataFun.macd(df, 12, 26)
+    df = dataFun.momentum(df, 14)#difference between the price now and beforefor the last 14 days
+    df = dataFun.macd(df, 12, 26)#Moving Average Convergence Divergence (a momentum indicator) based on the exponential moving average
     df = dataFun.rate_of_change(df, 14)
     df = dataFun.relative_strength_index(df)
 
-    df["boll_hi"] = pd.to_numeric(df["boll_hi"])
-    df["boll_lo"] = pd.to_numeric(df["boll_lo"])
-    df["20dSMA"] = pd.to_numeric(df["20dSMA"])
-    df["10dSMA"] = pd.to_numeric(df["10dSMA"])
-    df["5dSMA"] = pd.to_numeric(df["5dSMA"])
-    df["50dSMA"] = pd.to_numeric(df["50dSMA"])
-    df["200dSMA"] = pd.to_numeric(df["200dSMA"])
+    df["Bollinger band high"] = pd.to_numeric(df["Bollinger band high"])
+    df["Bollinger band low"] = pd.to_numeric(df["Bollinger band low"])
+    df["20 day Simple Moving Average"] = pd.to_numeric(df["20 day Simple Moving Average"])
+    df["10 day Simple Moving Average"] = pd.to_numeric(df["10 day Simple Moving Average"])
+    df["5 day Simple Moving Average"] = pd.to_numeric(df["5 day Simple Moving Average"])
+    df["50 day Simple Moving Average"] = pd.to_numeric(df["50 day Simple Moving Average"])
+    df["200 day Simple Moving Average"] = pd.to_numeric(df["200 day Simple Moving Average"])
     
-    df["bollAmplitude"] = df["boll_hi"] - df["boll_lo"]
-    df["distFromTopBoll"] = df["boll_hi"] - df["Prices"]
-    df["distFromLowBoll"] = df["boll_lo"] - df["Prices"]
-    df["20d200dDist"] = np.abs(df["20dSMA"] - df["200dSMA"])
+    df["Bollinger Amplitude"] = df["Bollinger band high"] - df["Bollinger band low"]
+    df["Distance from high Bollinger band"] = df["Bollinger band high"] - df["Prices"]
+    df["Distance from low Bollinger band"] = df["Bollinger band low"] - df["Prices"]
+    df["20 and 200 day SMA difference"] = np.abs(df["20 day Simple Moving Average"] - df["200 day Simple Moving Average"])
     #df
     
-    df = df[np.isfinite(df['200dSMA'])]
+    df = df[np.isfinite(df['200 day Simple Moving Average'])]
     #df.isna().sum()
     
     df = df.drop_duplicates("Date",keep="first")
@@ -507,17 +507,48 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     fraction_included = fraction_included/len(df.index)
         
     
-    print("Theoretical 90%CL: +-", 1.645*standard_deviation)
+    print("Theoretical 90%CL:", df["Deviation"].mean()," +-", 1.645*standard_deviation)
     
     print("Actual amount enclosed in this interval:", fraction_included)
-      
+    
+    Truth_CL_upper = 0.0
+    Truth_CL_lower = 0.0
+    Fraction_enclosed = 0.0
+    Number_enclosed = 0
+    
+    while Fraction_enclosed <0.45:
+        Truth_CL_upper += 0.01
+        for i in range(preset_early_stopping_rounds,len(df.index)):
+            if df['Deviation'][i]>df["Deviation"].mean() and df['Deviation'][i]<Truth_CL_upper:
+                Number_enclosed +=1
+            Fraction_enclosed = Number_enclosed/len(df.index)
+        print("upper_CL = ",Truth_CL_upper, " Fraction enclosed =", Fraction_enclosed)
+    
+    
+    Fraction_enclosed = 0.0
+    Number_enclosed = 0.0
+    
+    while Fraction_enclosed <0.45:
+        Truth_CL_lower -= 0.01
+        for i in range(preset_early_stopping_rounds,len(df.index)):
+            if df['Deviation'][i]<df["Deviation"].mean() and df['Deviation'][i] > Truth_CL_lower:
+                Number_enclosed +=1
+            Fraction_enclosed = Number_enclosed/len(df.index)
+        print("lower_CL = ",Truth_CL_lower, " Fraction enclosed =", Fraction_enclosed, "number enclosed =", Number_enclosed)
+    
+    print("CL = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , Truth_CL_lower)
+    print("Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper)
+    
+    
     string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
     string2 = "Mean error as standard deviation from truth value: ", standard_deviation
     string3 = "\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"
     string4 = df["Relative Profit"].sum()/len(df.index)
    
-    string5 = "Theoretical 90%CL: +-", 1.645*standard_deviation
+    string5 = "Theoretical gaussian 90%CL:", df["Deviation"].mean(), "+-", 1.645*standard_deviation
     string6 = "Actual amount enclosed in this interval:", fraction_included
+    string7 = "Truth CL = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower
+    string8 = "Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
     
     plt.hist(df['Deviation'],bins = 26)
     plt.savefig('Deviation_Histogram.png')
@@ -526,19 +557,27 @@ def Intellidock_Test_Profitability(df,window,barrels,costPerDay):
     
     lbl = Label(window, text=string1,font = ('Arial',30))
     lbl.grid(column=0, row=0)    
+    
     lbl = Label(window, text=string2,font = ('Arial',30))
     lbl.grid(column=0, row=1)    
+    
     lbl = Label(window, text=string3,font = ('Arial',30))
     lbl.grid(column=0, row=2)    
+    
     lbl = Label(window, text=string4,font = ('Arial',30))
     lbl.grid(column=0, row=3)
     
     lbl = Label(window, text=string5,font = ('Arial',30))
     lbl.grid(column=0, row=4)
+    
     lbl = Label(window, text=string6,font = ('Arial',30))
     lbl.grid(column=0, row=5)    
     
+    lbl = Label(window, text=string7,font = ('Arial',30))
+    lbl.grid(column=0, row=6)    
     
+    lbl = Label(window, text=string8,font = ('Arial',30))
+    lbl.grid(column=0, row=7)    
     return
 
 ##-----------------------------------------------------------------------------    
