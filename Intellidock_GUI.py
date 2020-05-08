@@ -26,12 +26,13 @@ data_acquired = False
 root = Tk()
 root.wm_title("Intellidock")
 
+#DEBUG_df = Intellidock_Get_Data() #purely for debug purposes
+
 #root['bg'] = '#49A'
 
 lbl = Label(root, text="Welcome to Intellidock",font = ('Arial Bold',50))
 lbl.grid(column=0, row=0)
    
-
 def download_data():
     window = Toplevel(root)  
     lbl = Label(window, text="Data is downloaded",font = ('Arial',30))
@@ -49,6 +50,8 @@ def download_data():
     
     btn = Button(root, text="Run a profitability check",bg = 'green',command = lambda: profit(df),font = ('Arial',30))
     btn.grid(column=0, row=5)
+    
+    print(df)
     
 
 def Accuracy(df):

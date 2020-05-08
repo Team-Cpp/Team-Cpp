@@ -41,6 +41,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import commonFunctions.dataFunctions as dataFun
+import commonFunctions.Covid_19_Data_Scrapers as Covid
 
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
@@ -88,13 +89,13 @@ def create_features(df, label=None, shift = 0):
     df['Day of the month'] = df['Date'].dt.day
     df['Week of the year'] = df['Date'].dt.weekofyear
     df = df.set_index('Date')
-    #X = df[['OilProduction', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26', 'ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist','dayofyear','dayofmonth','weekofyear']]
+    #X = df[['Oil Production', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26', 'ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist','dayofyear','dayofmonth','weekofyear']]
 
-    X = df[['OilProduction', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26', 'ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference','Day of the year','Day of the month','Week of the year']]
+    X = df[['Oil Production', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26', 'ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference','Day of the year','Day of the month','Week of the year',"COVID-19 Cases (ECDC data)"]]
     if shift > 0:
         tiems = X[['Day of the year','Day of the month','Week of the year']]
-        #X = X[['OilProduction', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26','ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist']].shift(shift)
-        X = X[['OilProduction', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26','ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference']].shift(shift)
+        #X = X[['Oil Production', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26','ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist']].shift(shift)
+        X = X[['Oil Production', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26','ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference',"COVID-19 Cases (ECDC data)"]].shift(shift)
         X = X.merge(tiems, how='inner', left_index=True, right_index=True)
 
     if label:
@@ -286,6 +287,7 @@ def Intellidock_Display_Feature_Importance(df,model,X_test, y_test):
 def Intellidock_Get_Data():
 
     trainDataDate = '2018-01-01'
+    Covid_Data_Start = '2019-12-31'
     
     print('Running...')
     print("Acquiring Data...")
@@ -342,12 +344,19 @@ def Intellidock_Get_Data():
     brentData = brentData.append(BStocks, ignore_index =True)
     brentData = brentData.sort_values(by = ["Date"])
     #brentData
+    
+    ECDC_Covid_Data_Series = Covid.ECDC_Covid_Data()
+    ECDC_Covid_Data_Frame = ECDC_Covid_Data_Series.to_frame()
+    print("Series:")
+    print(ECDC_Covid_Data_Series)
+    #print(ECDC_Covid_Data_Frame.columns())
+    #ECDC_Covid_Data_Frame.set_index('Date')
 
     print("Complete!")
     print("Constructing Data Frame...")
     df = pd.merge(newdf, brentData, on=['Date'], how ="left")
     df = df[df["Date"] > trainDataDate]
-    df = df.rename(columns={"Production of Crude Oil": "OilProduction"})
+    df = df.rename(columns={"Production of Crude Oil": "Oil Production"})
     #df.isna().sum()
 
     df["BrentPrices"] = df["BrentPrices"].interpolate(method='nearest')
@@ -382,17 +391,26 @@ def Intellidock_Get_Data():
     df["Distance from high Bollinger band"] = df["Bollinger band high"] - df["Prices"]
     df["Distance from low Bollinger band"] = df["Bollinger band low"] - df["Prices"]
     df["20 and 200 day SMA difference"] = np.abs(df["20 day Simple Moving Average"] - df["200 day Simple Moving Average"])
-    #df
+    
+    
+    #df=pd.concat([df,ECDC_Covid_Data.to_frame()])
+    #df.rename(columns = {"cases":"ECDC Covid Total Cases"})
     
     df = df[np.isfinite(df['200 day Simple Moving Average'])]
     #df.isna().sum()
+        
+    df = df.set_index('Date').join(ECDC_Covid_Data_Frame)
     
+    df = df.reset_index()
+    
+    #The remainder of this should just be formatting, making sure everything is easily readable.
     df = df.drop_duplicates("Date",keep="first")
     #df
     
     df = df[df["Date"] > trainDataDate]
     df = df.reset_index().drop(["index"], axis = 1)
-    #df
+    df = df.fillna(0)
+    df = df.rename({'cases':'COVID-19 Cases (ECDC data)'})
     
 
 
