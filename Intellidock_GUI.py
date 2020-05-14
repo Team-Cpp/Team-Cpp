@@ -3,7 +3,7 @@ from tkinter import *
 
 import os
 import sys
-sys.path.insert(1,os.environ['DF_ROOT'])
+#sys.path.insert(0,os.environ['DF_ROOT'])
 
 from matplotlib.backends.backend_tkagg import (
     FigureCanvasTkAgg, NavigationToolbar2Tk)
@@ -26,12 +26,13 @@ data_acquired = False
 root = Tk()
 root.wm_title("Intellidock")
 
+#DEBUG_df = Intellidock_Get_Data() #purely for debug purposes
+
 #root['bg'] = '#49A'
 
 lbl = Label(root, text="Welcome to Intellidock",font = ('Arial Bold',50))
 lbl.grid(column=0, row=0)
    
-
 def download_data():
     window = Toplevel(root)  
     lbl = Label(window, text="Data is downloaded",font = ('Arial',30))
@@ -49,6 +50,8 @@ def download_data():
     
     btn = Button(root, text="Run a profitability check",bg = 'green',command = lambda: profit(df),font = ('Arial',30))
     btn.grid(column=0, row=5)
+    
+    print(df)
     
 
 def Accuracy(df):
@@ -89,18 +92,15 @@ def profit(df):
     window2.img = img = PhotoImage(file="Deviation_Histogram.png")  
 
     canvas.create_image(0,0, anchor=NW, image=img)
+
 def features():
     window = Toplevel(root)  
     
-    canvas = Canvas(window, width = 600, height = 700)      
+    canvas = Canvas(window, width = 1000, height = 800)      
     canvas.pack()          
     window.img = img = PhotoImage(file="Decision_Tree.png")  
 
     canvas.create_image(0,0, anchor=NW, image=img)
-
-    
-
-
 
      
 btn = Button(root, text="Download Data",bg = 'green',command = download_data,font = ('Arial',30))

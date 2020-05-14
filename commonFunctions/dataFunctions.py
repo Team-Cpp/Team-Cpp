@@ -366,12 +366,12 @@ def macd(df, n_fast, n_slow):
         span=n_fast, min_periods=n_slow).mean())
     EMAslow = pd.Series(df['Prices'].ewm(
         span=n_slow, min_periods=n_slow).mean())
-    MACD = pd.Series(EMAfast - EMAslow, name='MACD_' +
-                     str(n_fast) + '_' + str(n_slow))
+    MACD = pd.Series(EMAfast - EMAslow, name='Moving average convergence/divergence ' +
+                     str(n_fast) + ' ' + str(n_slow))
     MACDsign = pd.Series(MACD.ewm(span=9, min_periods=9).mean(
-    ), name='MACDsign_' + str(n_fast) + '_' + str(n_slow))
-    MACDdiff = pd.Series(MACD - MACDsign, name='MACDdiff_' +
-                         str(n_fast) + '_' + str(n_slow))
+    ), name='Moving average convergence/divergence sign ' + str(n_fast) + ' ' + str(n_slow))
+    MACDdiff = pd.Series(MACD - MACDsign, name='Moving average convergence/divergence diff ' +
+                         str(n_fast) + ' ' + str(n_slow))
     df = df.join(MACD)
     df = df.join(MACDsign)
     df = df.join(MACDdiff)
