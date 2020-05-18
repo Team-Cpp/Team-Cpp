@@ -242,6 +242,7 @@ def combineFrames(dfPrice, df2):
 
     nulls = combined[combined.isnull()]
     last_prod = combined["Production of Crude Oil"].last_valid_index()
+    print(last_prod)
     last_prod_val = combined["Production of Crude Oil"].iloc[last_prod]
 
     oil = combined.pop("Production of Crude Oil")
