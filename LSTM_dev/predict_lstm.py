@@ -497,7 +497,7 @@ def plot2axis(
     fill_boll=False,
     bol_low=[],
     bol_high=[],
-    bol_name="",
+    bol_name=""
 ):
     def flip(items, ncol):
         return itertools.chain(*[items[i::ncol] for i in range(ncol)])
@@ -646,7 +646,7 @@ def plot2axis(
     # fig.title(title, size = 36)
     fig.tight_layout()
 
-    cols = df.columns
+    #cols = df.columns
 
 
 def plot_data(df, variables=train_cols, days=60):
@@ -676,12 +676,11 @@ def plot_data(df, variables=train_cols, days=60):
             bol_high=upBand,
             bol_name=bollName,
         )
-
         plt.title("WTI Price & " + var, size=36)
         plt.tight_layout()
         plt.savefig(
             os.path.join(OUTPUT_PATH + "featurePlots/", var + ".png"),
-            dpi=300,
+            dpi=50,
             bbox_inches="tight",
         )
 
@@ -743,7 +742,7 @@ def plot_correlations(df, features=focus_features, nonShiftFeats=nonShiftFeat):
     )
 
     plt.savefig(
-        os.path.join(OUTPUT_PATH, "mainFeatureCorrelations.png"), dpi=300, format="png"
+        os.path.join(OUTPUT_PATH, "mainFeatureCorrelations.png"), dpi=50, format="png"
     )
     print(corr)
     return corr
@@ -830,7 +829,6 @@ def train_model(df, val_split=0.1):
     print("Validation size", x_val.shape, y_val.shape)
 
     print("Building model...")
-    print("checking if GPU available", K.tensorflow_backend._get_available_gpus())
     print("Train--Test size", len(df_train), len(df_test))
     model = create_model()
 
@@ -899,7 +897,8 @@ def train_model(df, val_split=0.1):
 
 def test_train_loss(history):
     plt.style.use("fivethirtyeight")
-    plt.figure()
+    #plt.figure()
+    fig, ax = plt.subplots(figsize=(7,5))
     plt.plot(history["loss"])
     plt.plot(history["val_loss"])
     plt.title("Model loss")
@@ -909,7 +908,7 @@ def test_train_loss(history):
 
     plt.savefig(os.path.join(OUTPUT_PATH, "train_vis_BS_" + ".png"))
 
-def visualise_prediction(df, numDaysAgo, numDaysUntil):
+def visualise_prediction(df, numDaysAgo, numDaysUntil,weights):
     pred_df = copy.copy(df)
     # df_test = df_test[train_cols]
     pred_df = pred_df[-(numDaysAgo + TIME_STEPS) : -numDaysUntil]
