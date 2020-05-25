@@ -829,7 +829,7 @@ def train_model(df, val_split=0.1):
     print("Validation size", x_val.shape, y_val.shape)
 
     print("Building model...")
-    print("checking if GPU available", K.tensorflow_backend._get_available_gpus())
+    # print("checking if GPU available", K.tensorflow_backend._get_available_gpus())
     print("Train--Test size", len(df_train), len(df_test))
     model = create_model()
 
