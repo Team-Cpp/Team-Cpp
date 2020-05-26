@@ -695,9 +695,9 @@ focus_features = [
     # "DowJones",
     # "Gold",
     # "Bond10y",
-    "10dSMA",
-    "20dSMA",
-    "200dSMA",
+    # "10dSMA",
+    # "20dSMA",
+    # "200dSMA",
     "daysAbove200dSMA",
     "distFromLowBoll",
     "20d200dDist",
@@ -711,12 +711,12 @@ focus_features = [
 nonShiftFeat = ["Prices", "month"]
 
 
-def plot_correlations(df, features=focus_features, nonShiftFeats=nonShiftFeat):
+def plot_correlations(df, features=train_cols, nonShiftFeats=["Prices"]):
     sns.set(style="white")
     dfCorr = copy.copy(df)
 
     focus_cols = create_features(
-        dfCorr, features=focus_features, shift=1, nonShiftFeatures=nonShiftFeat
+        dfCorr, features=features, shift=1, nonShiftFeatures=nonShiftFeats
     )
     corr = focus_cols.corr()
 
@@ -918,8 +918,8 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
         pred_val = predict_new(weights, pred_df[i : (TIME_STEPS + i)])
         preds.append(pred_val[0][0])
         
-    real_vals = pred_df["Prices"].values
-    real_vals = real_vals[-numDaysAgo:-numDaysUntil]
+    real_vals = df["Prices"].values
+    real_vals = real_vals[-numDaysAgo:-numDaysUntil+1]
 
     plt.style.use("fivethirtyeight")
     plt.figure()
@@ -1073,10 +1073,12 @@ def getLstmData():
     df = df.sort_values(by="Date")
     df = df[df["Date"] > trainDataDate]
     df = df.reset_index().drop(["index"], axis=1)
-
+    colls = ["Date"] + train_cols
+    df_fin = df[colls]
+    df_fin["Nasdaq"].iloc[-1] = df_fin["Nasdaq"].iloc[-2]
     print("Saving dataframe to file ", dataFileName, "at ", INPUT_PATH)
-    df.to_csv(INPUT_PATH + dataFileName)
-    return df
+    df_fin.to_csv(INPUT_PATH + dataFileName)
+    return df_fin
 
 
 while True:
