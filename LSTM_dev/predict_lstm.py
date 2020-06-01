@@ -919,7 +919,10 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
         preds.append(pred_val[0][0])
         
     real_vals = df["Prices"].values
-    real_vals = real_vals[-numDaysAgo:-numDaysUntil+1]
+    addone = 1
+    if numDaysUntil == 1:
+        addone = 0
+    real_vals = real_vals[-numDaysAgo:-numDaysUntil+addone]
 
     plt.style.use("fivethirtyeight")
     plt.figure()
@@ -932,6 +935,7 @@ def visualise_prediction(df, numDaysAgo, numDaysUntil):
 
     plt.savefig(os.path.join(OUTPUT_PATH, "pred_vs_real_BS" + ".png"))
     plt.show()
+
 
 def predict_new(weights, df, days=1):
 
@@ -954,8 +958,14 @@ def predict_new(weights, df, days=1):
         x_for_pred.reshape(days, TIME_STEPS, inp_size), batch_size=days
     )
     pred_org = (pred * sc.data_range_[idx_col]) + sc.data_min_[idx_col]
+    add = td(days=1)
+    date = dt.strptime(df["Date"].iloc[-1],"%Y-%m-%d").date()
+    if date.isoweekday() == 5:
+        add = td(days=3)
+        
     if days == 1:
-        print("The price prediction for tomorrow is {:.3f}".format(pred_org[0][0]))
+        print("Price on {} was {:.3f}".format(date, data_for_pred["Prices"].iloc[-1]))
+        print("The price prediction for {} is {:.3f} dollhairs".format(date + add,pred_org[0][0]))
     else:
         print(
             "The price predictions for the following {:.0f} days are {}".format(
@@ -1080,6 +1090,74 @@ def getLstmData():
     df_fin.to_csv(INPUT_PATH + dataFileName)
     return df_fin
 
+def Test_Profitability(df, numDaysAgo, numDaysUntil):
+    
+    pred_df = copy.copy(df)
+    df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
+    df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
+    df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
+    df['Correct Prediction?'] = pd.Series(np.zeros(len(df.index)))
+    df['Deviation'] = pd.Series(np.zeros(len(df.index)))
+    df['Relative Profit'] = pd.Series(np.zeros(len(df.index)))
+    df['Confidence Values'] = pd.Series(np.zeros(len(df.index)))
+    df['Change in Price'] = pd.Series(np.zeros(len(df.index)))
+    df["Profit pred"] = pd.Series(np.zeros(len(df.index)))
+    df["Profit real"] = pd.Series(np.zeros(len(df.index)))
+    df["Accuracy"] = pd.Series(np.zeros(len(df.index)))
+    preset_early_stopping_rounds = 100
+    run_start = -numDaysAgo
+    run_active = False
+    
+    pred_df = pred_df[-(numDaysAgo + TIME_STEPS + 1) : -numDaysUntil]
+    preds = []
+    real_vals = df["Prices"].values
+    real_vals = real_vals[-numDaysAgo:]
+    daysOnHold = 1
+    loss = 0
+    for i in range(numDaysAgo - numDaysUntil + 1):
+        pred_val = predict_new(weights, pred_df[i : (TIME_STEPS + i)])
+        # print(pred_df[i : (TIME_STEPS + i)])
+        ij = len(df.index) - numDaysAgo + i
+        print("Real WTI oil price for {} was {:.3f} dollars".format(dt.strptime(df["Date"].iloc[ij-1],"%Y-%m-%d").date(),df["Prices"].iloc[ij-1]))
+                
+        
+  
+        df['WTI_Prediction_iterative'][ij] = pred_val
+        
+        change = (pred_val - df['WTI_Prediction_iterative'].iloc[ij-2])*barrels - costPerDay
+        realChange = (df["Prices"].iloc[ij-1] - df["Prices"].iloc[ij-2])*barrels - costPerDay
+        
+        if i == 0:
+            change = (pred_val - df["Prices"].iloc[ij-2])*barrels - costPerDay
+            
+        df['Change in Price'][ij] = change
+        delta_predicted = (pred_val-df["Prices"].iloc[-numDaysAgo+i-1])*barrels - costPerDay
+        
+        if (realChange > 0 and change < 0) or (realChange < 0 and change > 0):
+            df["Accuracy"][ij] = 1
+        else:
+            df["Accuracy"][ij] = 0
+        
+        if change > 0:
+            daysOnHold += 1
+            loss += costPerDay
+            
+        elif change <= 0:
+            sellAt = (df["Prices"].iloc[-numDaysAgo+i]*barrels) - loss
+            df["Profit pred"][ij] = sellAt
+            loss = 0
+            daysOnHold = 1
+            
+        df["Profit real"][ij] = (df["Prices"].iloc[-numDaysAgo+i-2])*barrels
+        df["Deviation"][ij] = pred_val - df["Prices"].iloc[-numDaysAgo+i-1]
+            
+                  
+    print ("Testing complete, accuracy percentage = {:.2f}, using data from {} to {}.".format(df['Accuracy'].sum()/(numDaysAgo - numDaysUntil), df["Date"][len(df.index)-numDaysAgo], df["Date"][len(df.index)-numDaysUntil]))
+    print("Mean error as absolute deviation from truth value: {:.4f}.".format(abs(df["Deviation"].mean())))
+    
+    print("\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale: \n {:.1f}".format((df["Profit pred"].sum()/(df["Profit pred"].astype(bool).sum(axis=0)) - df["Profit real"].sum()/(df["Profit real"].astype(bool).sum(axis=0)))/(numDaysAgo-numDaysUntil)))
+    return
+
 
 while True:
     quit = False
@@ -1091,12 +1169,13 @@ while True:
     pricevs = False
     archi = False
     updateData = False
+    profit = False
 
     while True:
         try:
             option = int(
                 input(
-                    "Choose your destiny:\n 0: Quit \n 1: Download data \n 2: Train or load model \n 3: Predict price for tomorrow \n 4: Plot correlations of variables \n 5: Plot variables used for training \n 6: Plot model training/test loss \n 7: Plot predicted vs real price \n 8: Plot model architecture \n :"
+                    "Choose your destiny:\n 0: Quit \n 1: Download data \n 2: Train or load model \n 3: Predict price for tomorrow \n 4: Plot correlations of variables \n 5: Plot variables used for training \n 6: Plot model training/test loss \n 7: Plot predicted vs real price \n 8: Plot model architecture \n 9: Test profitability \n :"
                 )
             )
             break
@@ -1121,6 +1200,8 @@ while True:
         pricevs = True
     elif option == 8:
         archi = True
+    elif option == 9:
+        profit = True
     else:
         continue
 
@@ -1184,7 +1265,7 @@ while True:
     if traintestloss:
         test_train_loss(history)
 
-    if pricevs:
+    if pricevs or profit:
         numDaysAgo = 0
         numDaysUntil = 0
         print(
@@ -1218,7 +1299,10 @@ while True:
             except (ValueError):
                 print("This must be later than the prediction start date!")
 
-        visualise_prediction(df, numDaysAgo, numDaysUntil)
+        if pricevs:
+            visualise_prediction(df, numDaysAgo, numDaysUntil)
+        else:
+            Test_Profitability(df, numDaysAgo, numDaysUntil)
 
     if archi:
         plot_model(model.model, to_file=os.path.join(OUTPUT_PATH, "model.png"))
