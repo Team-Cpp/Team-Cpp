@@ -614,7 +614,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
 
 #Default Parameters  
     
-'''barrels = 750000
+barrels = 750000
 costPerDay = 30000
 days = 1
 option = -1
@@ -684,4 +684,4 @@ while (option != 0):
         print("Exiting")
     if(option >= 1 and option <= 6):
         option = -1
-'''#---------------------------------------------
+#---------------------------------------------
