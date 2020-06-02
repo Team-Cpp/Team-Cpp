@@ -1,4 +1,5 @@
 xgboost==0.90
+click==7.0
 future==0.18.2
 h5py==2.10.0
 joblib==0.14.0
