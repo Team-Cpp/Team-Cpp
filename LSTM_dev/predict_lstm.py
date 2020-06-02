@@ -25,6 +25,7 @@ import matplotlib.dates as mdates
 import matplotlib.ticker as ticker
 import itertools
 import seaborn as sns
+import click
 
 import sklearn
 from sklearn import tree
@@ -957,6 +958,7 @@ def predict_new(weights, df, days=1):
     pred = new_model.predict(
         x_for_pred.reshape(days, TIME_STEPS, inp_size), batch_size=days
     )
+    pred_prob = new_model.predict_proba(x_for_pred.reshape(days, TIME_STEPS, inp_size), batch_size=days)
     pred_org = (pred * sc.data_range_[idx_col]) + sc.data_min_[idx_col]
     add = td(days=1)
     date = dt.strptime(df["Date"].iloc[-1],"%Y-%m-%d").date()
@@ -965,7 +967,7 @@ def predict_new(weights, df, days=1):
         
     if days == 1:
         print("Price on {} was {:.3f}".format(date, data_for_pred["Prices"].iloc[-1]))
-        print("The price prediction for {} is {:.3f} dollhairs".format(date + add,pred_org[0][0]))
+        print("The price prediction for {} is {:.3f} dollhairs".format(date + add,pred_org[0][0])) #,pred_prob[0][0]
     else:
         print(
             "The price predictions for the following {:.0f} days are {}".format(
@@ -1094,11 +1096,8 @@ def Test_Profitability(df, numDaysAgo, numDaysUntil):
     
     pred_df = copy.copy(df)
     df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
-    df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
-    df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
-    df['Correct Prediction?'] = pd.Series(np.zeros(len(df.index)))
     df['Deviation'] = pd.Series(np.zeros(len(df.index)))
-    df['Relative Profit'] = pd.Series(np.zeros(len(df.index)))
+
     df['Confidence Values'] = pd.Series(np.zeros(len(df.index)))
     df['Change in Price'] = pd.Series(np.zeros(len(df.index)))
     df["Profit pred"] = pd.Series(np.zeros(len(df.index)))
@@ -1119,8 +1118,6 @@ def Test_Profitability(df, numDaysAgo, numDaysUntil):
         # print(pred_df[i : (TIME_STEPS + i)])
         ij = len(df.index) - numDaysAgo + i
         print("Real WTI oil price for {} was {:.3f} dollars".format(dt.strptime(df["Date"].iloc[ij-1],"%Y-%m-%d").date(),df["Prices"].iloc[ij-1]))
-                
-        
   
         df['WTI_Prediction_iterative'][ij] = pred_val
         
@@ -1152,163 +1149,93 @@ def Test_Profitability(df, numDaysAgo, numDaysUntil):
         df["Deviation"][ij] = pred_val - df["Prices"].iloc[-numDaysAgo+i-1]
             
                   
-    print ("Testing complete, accuracy percentage = {:.2f}, using data from {} to {}.".format(df['Accuracy'].sum()/(numDaysAgo - numDaysUntil), df["Date"][len(df.index)-numDaysAgo], df["Date"][len(df.index)-numDaysUntil]))
+    print ("Testing complete, accuracy percentage = {:.1%}, using data from {} to {}.".format(df['Accuracy'].sum()/(numDaysAgo - numDaysUntil), df["Date"][len(df.index)-numDaysAgo], df["Date"][len(df.index)-numDaysUntil]))
     print("Mean error as absolute deviation from truth value: {:.4f}.".format(abs(df["Deviation"].mean())))
     
     print("\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale: \n {:.1f}".format((df["Profit pred"].sum()/(df["Profit pred"].astype(bool).sum(axis=0)) - df["Profit real"].sum()/(df["Profit real"].astype(bool).sum(axis=0)))/(numDaysAgo-numDaysUntil)))
     return
 
-
-while True:
-    quit = False
-    trained = False
-    predicc = False
-    correls = False
-    trainvars = False
-    traintestloss = False
-    pricevs = False
-    archi = False
-    updateData = False
-    profit = False
-
-    while True:
+@click.command("LSTM WTI Predictor")
+@click.option("--getData/--no-getData", "getData", help="Download new data and save to file", default=False)
+@click.option("--trainModel/--no-trainModel", "trainModel", help="Train new model", default=False)
+@click.option("--loadModel/--no-loadModel", "loadModel", help="Load existing model file", default=True)
+@click.option("--predict/--no-predict", "predict", help="Make price predictions", default=False)
+@click.option("--plotCorrelations/--no-plotCorrelations", "plotCorrelations", help="Plot correlation matrix of used variables", default=False)
+@click.option("--plotVariables/--no-plotVariables", "plotVariables", help="Plot variables used in the model", default=False)
+@click.option("--trainTestLoss/--no-trainTestLoss", "trainTestLoss", help="Plot loss of training and testing data", default=False)
+@click.option("--plotPrice/--no-plotPrice", "plotPrice", help="Plot comparison of predicted price vs real price between dates given by --daysSince and --daysUntil", default=False)
+@click.option("--testProfit/--no-testProfit", "testProfit", help="Test profitability of using the model between dates given by --daysSince and --daysUntil", default=False)
+@click.option("--daysSince", "daysSince", help="Start day for price prediction (number of days to go back from today)", type=int, default=180)
+@click.option("--daysUntil", "daysUntil", help="End day for price prediction (number of days to go back from today)", type=int, default=90)
+@click.option("--plotArchitecture/--no-plotArchitecture", "plotArchitecture", help="Plot the architecture of the LSTM model trained", default=False)
+def run(getData, trainModel, loadModel, predict, plotCorrelations, plotVariables, trainTestLoss,
+        plotPrice, testProfit, daysSince, daysUntil, plotArchitecture):
+    global model 
+    global history 
+    global sc
+    global weights
+    
+    if getData is False:
         try:
-            option = int(
-                input(
-                    "Choose your destiny:\n 0: Quit \n 1: Download data \n 2: Train or load model \n 3: Predict price for tomorrow \n 4: Plot correlations of variables \n 5: Plot variables used for training \n 6: Plot model training/test loss \n 7: Plot predicted vs real price \n 8: Plot model architecture \n 9: Test profitability \n :"
-                )
-            )
-            break
-        except (ValueError):
-            print("Invalid input, please select one of the possible integers!")
-
-    if option == 0:
-        break
-    elif option == 1:
-        updateData = True
-    elif option == 2:
-        trained = True
-    elif option == 3:
-        predicc = True
-    elif option == 4:
-        correls = True
-    elif option == 5:
-        trainvars = True
-    elif option == 6:
-        traintestloss = True
-    elif option == 7:
-        pricevs = True
-    elif option == 8:
-        archi = True
-    elif option == 9:
-        profit = True
-    else:
-        continue
-
-    if updateData is False:
-        try:
+            print("Attempting to load data from {}".format(INPUT_PATH + dataFileName))
             df = pd.read_csv(INPUT_PATH + dataFileName)
             print("Loaded data file " + dataFileName + " ...")
-            updateData = False
+            getData = False
 
         except FileNotFoundError:
-            print("Data file not found")
-            updateData = True
+            print("Data file not found, downloading new data...")
+            getData = True
 
-    if updateData is True:
+    if getData is True:
         df = getLstmData()
 
-    if trained is True:
+    if loadModel or (loadModel is False and trainModel is False):
+        try:
+            print("Attempting to load model weights, history, and scaler from {}".format(OUTPUT_PATH))
+            
+            model = load_model(os.path.join(OUTPUT_PATH, modFileName))
+            
+            history = pd.read_csv(os.path.join(OUTPUT_PATH, histFileName))
+             
+            sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
+             
+            weights = model.get_weights()
+            
+            print("Loaded saved model...")
+            trainModel = False
+            
+        except (FileNotFoundError, OSError):
+            print("Model not found, training new model")
+            trainModel = True
+            
+    if trainModel:
+        model, history, weights = train_model(df)
+        model_trained = True
 
-        choice = None
-        print("\n 0: Load existing model \n 1: Train new model \n")
-        while True:
-            try:
-                choice = int(input(":"))
-                if choice != 0 and choice != 1:
-                    raise (ValueError)
-                else:
-                    break
-
-            except (ValueError):
-                print("Choose an acceptable option!")
-
-        if choice == 0:
-            try:
-
-                model = load_model(os.path.join(OUTPUT_PATH, modFileName))
-                history = pd.read_csv(os.path.join(OUTPUT_PATH, histFileName))
-                sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
-                weights = model.get_weights()
-                print("Loaded saved model...")
-
-            except (FileNotFoundError, OSError):
-                print("Model not found")
-                choice = 1
-
-        if choice == 1:
-
-            model, history, weights = train_model(df)
-            model_trained = True
-        else:
-            continue
-
-    if predicc:
+    if predict:
         predict_new(weights, df)
 
-    if correls:
+    if plotCorrelations:
         plot_correlations(df)
 
-    if trainvars:
+    if plotVariables:
         plot_data(df)
 
-    if traintestloss:
+    if trainTestLoss:
         test_train_loss(history)
 
-    if pricevs or profit:
-        numDaysAgo = 0
-        numDaysUntil = 0
-        print(
-            "Please enter the timeframe for which you wish to compare prediction and real price"
-        )
-        while True:
-            try:
-                numDaysAgo = int(
-                    input("Enter how many days ago you want the prediction to start: ")
-                )
-                if numDaysAgo < 0:
-                    raise (ValueError)
-                else:
-                    break
-            except (ValueError):
-                print("Please enter a positive integer for number of days!")
+    if plotPrice:
+        print("Calculating predictions for period {} to {}".format(dt.today().date() - td(daysSince), dt.today().date() - td(daysUntil)))
+        visualise_prediction(df, daysSince, daysUntil)
+        
+    if testProfit:
+        print("Testing the profitability of the model in period {} to {}".format(dt.today().date() - td(daysSince), dt.today().date() - td(daysUntil)))
+        Test_Profitability(df, daysSince, daysUntil)
 
-        while True:
-            try:
-                numDaysUntil = int(
-                    input(
-                        "Enter until how many days ago you want the prediction to end: "
-                    )
-                )
-                numDaysUntil += 1
-                if numDaysUntil > numDaysAgo:
-                    raise (ValueError)
-                else:
-                    break
-
-            except (ValueError):
-                print("This must be later than the prediction start date!")
-
-        if pricevs:
-            visualise_prediction(df, numDaysAgo, numDaysUntil)
-        else:
-            Test_Profitability(df, numDaysAgo, numDaysUntil)
-
-    if archi:
+    if plotArchitecture:
         plot_model(model.model, to_file=os.path.join(OUTPUT_PATH, "model.png"))
+        
+    return
 
-    if quit:
-        break
-
-    else:
-        continue
+if __name__ == "__main__":
+    run()
