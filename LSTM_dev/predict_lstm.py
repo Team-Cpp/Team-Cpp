@@ -133,7 +133,7 @@ costPerDay = 30000
 daysToPredict = 1
 
 # Data split for training and testing.
-trainDataDate = "2009-06-01"
+trainDataDate = "1999-06-01"
 testSplitDate = "2020-04-01"
 
 # Parameters for the model.
@@ -141,7 +141,7 @@ params = {
     "batch_size": 16,  # 20<16<10, 25 was a bust
     "epochs": 200,
     "lr": 0.0010000,
-    "time_steps": 50,
+    "time_steps": 60,
 }
 
 INPUT_PATH = PATH + "/LSTM_dev/inputs/"
@@ -243,7 +243,6 @@ def combineFrames(dfPrice, df2):
 
     nulls = combined[combined.isnull()]
     last_prod = combined["Production of Crude Oil"].last_valid_index()
-    print(last_prod)
     last_prod_val = combined["Production of Crude Oil"].iloc[last_prod]
 
     oil = combined.pop("Production of Crude Oil")
@@ -787,7 +786,7 @@ def create_model(batch_size=BATCH_SIZE):
     return lstm_model
 
 
-def train_model(df, val_split=0.1):
+def train_model(df, val_split=0.05):
 
     from keras import backend as K
 
@@ -802,10 +801,8 @@ def train_model(df, val_split=0.1):
 
     tooManyTests = len(df_test) % (BATCH_SIZE )#+ TIME_STEPS)
     df_test = df_test[tooManyTests:]
-
     tooManyTrains = len(df_train) % (BATCH_SIZE )#+ TIME_STEPS)
     df_train = df_train[tooManyTrains:]
-
     x = df_train.loc[:, train_cols].values
     sc = MinMaxScaler()
     x_train = sc.fit_transform(x)
@@ -986,7 +983,6 @@ def getLstmData():
     df = combineFrames(df, oilDF)
     df = df[np.isfinite(df["Prices"])]
     df = df.reset_index().drop(["index"], axis=1)
-
     for i, attr in enumerate(dataAttr):
         if i == 0:
             continue
@@ -1023,7 +1019,6 @@ def getLstmData():
     # Calculating the technical indicators for price data
     df = df.reset_index().drop(["index"], axis=1)
     df = df.sort_values(by=["Date"])
-
     for sma in smas:
         df[sma] = SMA(smas[sma], df["Prices"])
         df[sma] = pd.to_numeric(df[sma])
@@ -1064,12 +1059,12 @@ def getLstmData():
     df["distFromTopBoll"] = df["boll_hi"] - df["Prices"]
     df["distFromLowBoll"] = df["boll_lo"] - df["Prices"]
     df["20d200dDist"] = np.abs(df["20dSMA"] - df["200dSMA"])
-
     df = df[np.isfinite(df["200dSMA"])]
     df = df.rename(columns={"Production of Crude Oil": "OilProduction"})
     df = df.drop_duplicates("Date", keep="first")
     df = df[np.isfinite(df["Prices"])]
     df = df.reset_index().drop(["index"], axis=1)
+    
 
     """
     Creating time series features from datetime index
@@ -1158,7 +1153,7 @@ def Test_Profitability(df, numDaysAgo, numDaysUntil):
 @click.command("LSTM WTI Predictor")
 @click.option("--getData/--no-getData", "getData", help="Download new data and save to file", default=False)
 @click.option("--trainModel/--no-trainModel", "trainModel", help="Train new model", default=False)
-@click.option("--loadModel/--no-loadModel", "loadModel", help="Load existing model file", default=True)
+@click.option("--loadModel/--no-loadModel", "loadModel", help="Load existing model file", default=False)
 @click.option("--predict/--no-predict", "predict", help="Make price predictions", default=False)
 @click.option("--plotCorrelations/--no-plotCorrelations", "plotCorrelations", help="Plot correlation matrix of used variables", default=False)
 @click.option("--plotVariables/--no-plotVariables", "plotVariables", help="Plot variables used in the model", default=False)
@@ -1194,16 +1189,11 @@ def run(getData, trainModel, loadModel, predict, plotCorrelations, plotVariables
             print("Attempting to load model weights, history, and scaler from {}".format(OUTPUT_PATH))
             
             model = load_model(os.path.join(OUTPUT_PATH, modFileName))
-            
             history = pd.read_csv(os.path.join(OUTPUT_PATH, histFileName))
-             
             sc = joblib.load(os.path.join(OUTPUT_PATH, scalerFileName))
-             
             weights = model.get_weights()
-            
             print("Loaded saved model...")
-            trainModel = False
-            
+
         except (FileNotFoundError, OSError):
             print("Model not found, training new model")
             trainModel = True
