@@ -691,10 +691,8 @@ while (option != 0):
 @click.command("BDT_Predictor")
 @click.option("--predict/--no-predict", "predict", help="Make price predictions", default=False)
 @click.option("--testProfit/--no-testProfit", "testProfit", help="Test profitability of using the model from 01/01/2018", default=False)
-@click.option("--plotVariables/--no-plotVariables", "plotVariables", help="PLot the relative importance of variables in the model", default=False)
 
-
-def run(predict, testProfit, plotVariableImportance):
+def run(predict, testProfit):
     barrels = 750000
     costPerDay = 30000
     days = 1
@@ -748,3 +746,6 @@ def run(predict, testProfit, plotVariableImportance):
             writer.writerow(os8)
 
     return
+
+if __name__ == "__main__":
+    run()
