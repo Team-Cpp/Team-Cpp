@@ -133,7 +133,7 @@ costPerDay = 30000
 daysToPredict = 1
 
 # Data split for training and testing.
-trainDataDate = "1999-06-01"
+trainDataDate = "1998-06-01"
 testSplitDate = "2020-04-01"
 
 # Parameters for the model.
@@ -141,7 +141,7 @@ params = {
     "batch_size": 16,  # 20<16<10, 25 was a bust
     "epochs": 200,
     "lr": 0.0010000,
-    "time_steps": 60,
+    "time_steps": 30,
 }
 
 INPUT_PATH = PATH + "/LSTM_dev/inputs/"
@@ -786,7 +786,7 @@ def create_model(batch_size=BATCH_SIZE):
     return lstm_model
 
 
-def train_model(df, val_split=0.05):
+def train_model(df, val_split=0.15):
 
     from keras import backend as K
 
@@ -794,6 +794,7 @@ def train_model(df, val_split=0.05):
 
     modeldf = copy.copy(df)
     modeldf = modeldf[modeldf["Date"] > trainDataDate]
+    print("Training on data from {}".format(modeldf["Date"].iloc[0]))
 
     df_train, df_test = train_test_split(
         modeldf, train_size=(1 - val_split), test_size=val_split, shuffle=False

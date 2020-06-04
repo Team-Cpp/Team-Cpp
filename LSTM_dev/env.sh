@@ -25,12 +25,11 @@ fi
 }
 #------------------------------------------------------------------------------
 
-chkpypkg xgboost
 chkpypkg sklearn
 chkpypkg numpy
 chkpypkg pandas
 chkpypkg pickle
-chkpypkg tkinter
+chkpypkg click
 chkpypkg yfinance
 chkpypkg quandl
 chkpypkg math
