@@ -54,8 +54,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-import dataFunctions as dataFun
-
 import commonFunctions.dataFunctions as dataFun
 import commonFunctions.Covid_19_Data_Scrapers as Covid
 
