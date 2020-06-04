@@ -567,6 +567,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     string5 = "Theoretical gaussian 90%CL:", df["Deviation"].mean(), "+-", 1.645*standard_deviation
     string6 = "Actual amount enclosed in this interval:", fraction_included
     string7 = "Empirical 90% Confidence Limit Range = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower, "relative to predicted price"
+
     string8 = "90% Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
     
 
