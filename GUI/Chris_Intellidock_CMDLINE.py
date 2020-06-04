@@ -59,7 +59,6 @@ import dataFunctions as dataFun
 import commonFunctions.dataFunctions as dataFun
 import commonFunctions.Covid_19_Data_Scrapers as Covid
 
-import csv
 
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.metrics import mean_squared_error
@@ -84,8 +83,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import xgboost as xgb
 from xgboost import plot_importance, plot_tree
-
-import click
 
 from tkinter import *
 
@@ -279,7 +276,7 @@ def Intellidock_Display_Feature_Importance(df,model,X_test, y_test):
     fig, ax = plt.subplots(figsize=(12,18))
     xgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
     plt.show()
-    return fig
+    return
 
 def Intellidock_Get_Data():
 
@@ -566,9 +563,8 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
    
     string5 = "Theoretical gaussian 90%CL:", df["Deviation"].mean(), "+-", 1.645*standard_deviation
     string6 = "Actual amount enclosed in this interval:", fraction_included
-    string7 = "Empirical 90% Confidence Limit Range = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower, "relative to predicted price"
-
-    string8 = "90% Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
+    string7 = "Truth CL = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower
+    string8 = "Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
     
 
     plt.figure()
@@ -578,7 +574,9 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     plt.savefig('Deviation_Histogram.png')
     plt.show()
 
-    return(string1,string2,string3,string4,string7,string8)
+    
+
+    return(string1,string2,string3,string4)
 
     lbl = Label(window, text=string1,font = ('Arial',30))
     lbl.grid(column=0, row=0)    
@@ -616,7 +614,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
 
 #Default Parameters  
     
-'''barrels = 750000
+barrels = 750000
 costPerDay = 30000
 days = 1
 option = -1
@@ -686,68 +684,4 @@ while (option != 0):
         print("Exiting")
     if(option >= 1 and option <= 6):
         option = -1
-'''#---------------------------------------------
-
-#Click Commands
-
-@click.command("BDT_Predictor")
-@click.option("--predict/--no-predict", "predict", help="Make price predictions", default=False)
-@click.option("--testProfit/--no-testProfit", "testProfit", help="Test profitability of using the model from 01/01/2018", default=False)
-
-def run(predict, testProfit):
-    barrels = 750000
-    costPerDay = 30000
-    days = 1
-    option = -1
-    df = Intellidock_Get_Data()
-    if predict is True:
-        df,model,X_test,y_test = Intellidock_Train(df)
-        os1,os2,os3,os4,os5,os6,os7,os8,os9 = Intellidock_Predict_Next_Day(df,model,X_test,y_test,barrels,costPerDay)
-
-        with open('BDT_Predicted_Data.csv','w',newline = '') as file:
-            writer = csv.writer(file)
-    
-            writer.writerow([os1])
-    
-            writer.writerow(os2)
-    
-            writer.writerow(os3)
-    
-            writer.writerow(os4)
-    
-            writer.writerow(os5)
-    
-            writer.writerow(os6)
-    
-            writer.writerow(os7)
-    
-            writer.writerow(os8)
-    
-            writer.writerow(os9)
-            
-            fig = Intellidock_Display_Feature_Importance(df,model,X_test,y_test)
-            
-            fig.savefig('Feature_Importance.png')
-        
-    if testProfit is True:
-        os1,os2,os3,os4,os7,os8 = Intellidock_Test_Profitability(df, barrels, costPerDay)
-        
-        with open('BDT_Profitability_Test.csv','w',newline = '') as file:
-            writer = csv.writer(file)
-    
-            writer.writerow([os1])
-    
-            writer.writerow(os2)
-    
-            writer.writerow(os3)
-    
-            writer.writerow(os4)
-    
-            writer.writerow(os7)
-    
-            writer.writerow(os8)
-
-    return
-
-if __name__ == "__main__":
-    run()
+#---------------------------------------------

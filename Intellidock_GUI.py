@@ -51,7 +51,7 @@ def download_data():
     btn = Button(root, text="Run a profitability check",bg = 'green',command = lambda: profit(df),font = ('Arial',30))
     btn.grid(column=0, row=5)
     
-    print(df)
+    #print(df)
     
 
 def Accuracy(df):
