@@ -609,7 +609,7 @@ def run(predict, testProfit):
 #---------------------------------------------------
 #Debugging section - lets the code be run locally to check for bugs before pushing to git/VM
 
-'''
+
 barrels = 750000
 costPerDay = 30000
 
@@ -619,5 +619,5 @@ os1,os2,os3,os4,os7,os8 = Intellidock_Test_Profitability(df, barrels, costPerDay
 
 df,model,X_test,y_test = Intellidock_Train(df)
 os1,os2,os3,os4,os5,os6,os7,os8,os9 = Intellidock_Predict_Next_Day(df,model,X_test,y_test,barrels,costPerDay)
-'''
+
 
