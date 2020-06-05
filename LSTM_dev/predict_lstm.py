@@ -742,7 +742,7 @@ def plot_correlations(df, features=train_cols, nonShiftFeats=["Prices"]):
     )
 
     plt.savefig(
-        os.path.join(OUTPUT_PATH, "mainFeatureCorrelations.png"), dpi=300, format="png"
+        os.path.join(OUTPUT_PATH, "mainFeatureCorrelations.png"), dpi=50, format="png"
     )
     print(corr)
     return corr
@@ -897,7 +897,7 @@ def train_model(df, val_split=0.15):
 
 def test_train_loss(history):
     plt.style.use("fivethirtyeight")
-    plt.figure()
+    plt.figure(figsize=(7,5))
     plt.plot(history["loss"])
     plt.plot(history["val_loss"])
     plt.title("Model loss")
