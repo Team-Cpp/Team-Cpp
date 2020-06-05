@@ -126,86 +126,6 @@ def create_features(df, label=None, shift = 0):
 def Intellidock_Test_Accuracy(df,window,barrels,costPerDay):
     string1,string2,string3,string4 = Intellidock_Test_Profitability(df,window,barrels,costPerDay)
     return(string1,string2,string3,string4)
-    """
-    df['WTI_Prediction_iterative'] = pd.Series(np.zeros(len(df.index)))
-    df['WTI_Prediction_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
-    df['Prices_iterative_delta'] = pd.Series(np.zeros(len(df.index)))
-    df['Correct Prediction?'] = pd.Series(np.zeros(len(df.index)))
-    df['Deviation'] = pd.Series(np.zeros(len(df.index)))
-    preset_early_stopping_rounds = 100
-    sum_of_squares = 0
-    n = len(df.index)-preset_early_stopping_rounds
-    
-    for i in range(preset_early_stopping_rounds,len(df.index)):
-        print(i)
-        #df_iter = df[0:][0:i+1]
-        
-        #testSplitDate = df_iter.Date[i].strftime("%Y-%m-%d")
-        #testSplitDate = df_iter.Date[i]
-        
-        #iterative_df_train = df[0:][0:i+1][df[0:][0:i+1]["Date"] <= testSplitDate].copy()
-        #iterative_df_test = df[0:][0:i+1][df[0:][0:i+1]["Date"] > testSplitDate].copy()
-        
-        
-        #X_train, y_train = create_features(iterative_df_train, label='Prices')
-        X_train, y_train = create_features(df[0:i], label='Prices',shift = 1)
-        X_test, y_test = create_features(df[i::i], label='Prices',shift = 1)
-        
-        model = XGBRegressor(
-                n_estimators=1000,
-                #max_depth=8,
-                #min_child_weight=300, 
-                #colsample_bytree=0.8, 
-                #subsample=0.8, 
-                #eta=0.3,    
-                #seed=42
-                )
-        
-        model.fit(
-                X_train, 
-                y_train, 
-                eval_metric="rmse", 
-                eval_set=[(X_train, y_train), (X_test, y_test)], 
-                verbose=False, 
-                early_stopping_rounds = preset_early_stopping_rounds
-                )
-        df['WTI_Prediction_iterative'][i] = model.predict(X_test)[0]
-        
-        delta_predicted = (df['WTI_Prediction_iterative'][i]-df['Prices'][i-1])*barrels - costPerDay
-        
-        if(delta_predicted>0):
-            df['WTI_Prediction_iterative_delta'][i]=1
-        else:
-            df['WTI_Prediction_iterative_delta'][i]=-1
-                
-        delta_truth = (df['Prices'][i]-df['Prices'][i-1])*barrels - costPerDay
-                
-        if(delta_truth>0):
-            df['Prices_iterative_delta'][i]=1
-        else:
-            df['Prices_iterative_delta'][i]=-1
-                        
-        if(df['Prices_iterative_delta'][i]==df['WTI_Prediction_iterative_delta'][i]):
-            df['Correct Prediction?'][i]=1
-        
-            
-        df["Deviation"][i] = abs(df['WTI_Prediction_iterative'][i]-df['Prices'][i])
-        sum_of_squares += df["Deviation"][i]
-        
-    print ("Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],".")
-    
-    standard_deviation = (sum_of_squares/n - df["Deviation"].mean()**2)**0.5
-    
-    print("Mean error as absolute deviation from truth value: ", standard_deviation)
-    
-    string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
-    string2 = "Mean error as absolute deviation from truth value: ", standard_deviation
-    lbl = Label(window, text=string1,font = ('Arial',30))
-    lbl.grid(column=0, row=0)  
-    lbl = Label(window, text=string2,font = ('Arial',30))
-    lbl.grid(column=0, row=1)  
-    """
-    return()
 
 def Intellidock_Train(df):
     
@@ -250,11 +170,20 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     else:  
         output_string = "Predicted price change does not warrant waiting until tomorrow."
         print("\033[91m" + output_string + "\033[0m")
-                
+    row_index = 0
+    with open('CL_Limits.csv') as CL_lims:       
+        CL_Lims_Reader = csv.reader(CL_lims)
+        for row in CL_Lims_Reader:
+            if row_index == 0:
+                CL_Low = float(row[0])
+            elif row_index == 1:
+                CL_High = float(row[0])
+            row_index += 1
+            
     
     print("Details:")
     print("Price Today: ",df['Prices'][len(df.index)-1])
-    print("Price Predicted Tomorrow: ",WTI_Prediction_tomorrow)
+    print("Price Predicted Tomorrow: ",WTI_Prediction_tomorrow,'(90% Confidence Interval of',WTI_Prediction_tomorrow + CL_Low,'to',WTI_Prediction_tomorrow + CL_High,')')
     print("Anticipated price change:", WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])
     print("Assumed Costs = ",costPerDay)
     print("Barrels Contained on Ship: = ", barrels)
@@ -276,7 +205,7 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     return(output_string,string1,string2,string3,string4,string5,string6,string7,string8)
 
 def Intellidock_Display_Feature_Importance(df,model,X_test, y_test):
-    fig, ax = plt.subplots(figsize=(12,18))
+    fig, ax = plt.subplots(figsize=(9,10))
     xgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
     plt.show()
     return fig
@@ -536,12 +465,12 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     Number_enclosed = 0
     
     while Fraction_enclosed <0.45:
-        Truth_CL_upper += 0.01
+        Truth_CL_upper += 0.001
         for i in range(preset_early_stopping_rounds,len(df.index)):
-            if df['Deviation'][i]>df["Deviation"].mean() and df['Deviation'][i]<Truth_CL_upper:
+            if df['Deviation'][i]>0 and df['Deviation'][i]<Truth_CL_upper:
                 Number_enclosed +=1
             Fraction_enclosed = Number_enclosed/len(df.index)
-        print("upper_CL = ",Truth_CL_upper, " Fraction enclosed =", Fraction_enclosed)
+        print("upper_CL = ",Truth_CL_upper, " Fraction enclosed =", Fraction_enclosed,"number enclosed =", Number_enclosed)
     
     
     Fraction_enclosed = 0.0
@@ -550,13 +479,13 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     while Fraction_enclosed <0.45:
         Truth_CL_lower -= 0.01
         for i in range(preset_early_stopping_rounds,len(df.index)):
-            if df['Deviation'][i]<df["Deviation"].mean() and df['Deviation'][i] > Truth_CL_lower:
+            if df['Deviation'][i]<0 and df['Deviation'][i] > Truth_CL_lower:
                 Number_enclosed +=1
             Fraction_enclosed = Number_enclosed/len(df.index)
         print("lower_CL = ",Truth_CL_lower, " Fraction enclosed =", Fraction_enclosed, "number enclosed =", Number_enclosed)
     
-    print("CL = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , Truth_CL_lower)
-    print("Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper)
+    print("CL = ",0,"+",Truth_CL_upper, "-" , Truth_CL_lower)
+    print("Confidence range = ",Truth_CL_lower,"to", Truth_CL_upper)
     
     
     string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
@@ -568,6 +497,13 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     string6 = "Actual amount enclosed in this interval:", fraction_included
     string7 = "Empirical 90% Confidence Limit Range = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower, "relative to predicted price"
     string8 = "90% Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
+    
+    with open('CL_Limits.csv','w',newline = '') as file_CL_Limits:
+            writer = csv.writer(file_CL_Limits)
+    
+            writer.writerow([Truth_CL_lower])
+            
+            writer.writerow([Truth_CL_upper])
     
 
     plt.figure()
@@ -606,86 +542,6 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
 
 ##-----------------------------------------------------------------------------    
 #End of function Definitions
-
-#CMDline interface (mostly for debugging)  
-
-#---------------------------------------------
-##-----------------------------------------------------------------------------    
-#End of function Definitions
-
-#Default Parameters  
-    
-'''barrels = 750000
-costPerDay = 30000
-days = 1
-option = -1
-
-trained = False
-data_acquired = False
-while (option != 0):
-    print("Please enter one of the following options: \n 0: quit \n 1: Download Data \n 2: Test the accuracy of the system \n 3: Train the model (must do pre prediction) \n 4: Predict if staying undocked is worthwhile \n 5: Display Feature Importance \n 6: Run a Profitability Check")
-    print("\n Status: \n Data Acquired = ", data_acquired, " \n Trained = ", trained)
-    while (option < 0 or option > 6):
-        
-        option = input()
-        
-        if(option != "0" and option != "1" and option != "2" and option != "3" and option != "4" and option != "5" and option != "6"):
-          print("Invalid input, please select either 0,1,2,3,4 or 5")
-          option = -1
-        else:
-            option = int(option)
-            
-        if((option < 0 or option > 6)):
-            print("Invalid input, please select either 0,1,2,3,4 or 5")
-    if (option == 1):
-        print("Attempting to get data")
-        df = Intellidock_Get_Data()
-        data_acquired=True
-        
-    elif(option == 2):
-        print("Attempting to test prediction accuracy")
-           
-        if (data_acquired == False):
-            print("Warning, no data downloaded. Run option 1 first!")
-        else:
-            Intellidock_Test_Accuracy(df)
-            
-    elif(option == 3):
-        print("Training...")
-        df,model,X_test,y_test = Intellidock_Train(df)
-        trained = True
-        
-    elif(option == 4):
-        print("Attempting to predict next day price...")
-        if (trained == False):
-            print("Warning, system not trained. Run option 3 first!")
-        elif (data_acquired == False):
-            print("Warning, no data downloaded. Run option 1 first!")
-        else:
-            Intellidock_Predict_Next_Day(df,model,X_test,y_test,barrels,costPerDay)
-            
-    elif(option == 5):
-        print("Displaying feature importance figure...")
-        if (trained == False):
-            print("Warning, system not trained. Run option 3 first!")
-        elif (data_acquired == False):
-            print("Warning, no data downloaded. Run option 1 first!")
-        else:
-            Intellidock_Display_Feature_Importance(df,model,X_test,y_test)
-            
-    elif(option == 6):
-        print("Attempting to test prediction profitability")
-           
-        if (data_acquired == False):
-            print("Warning, no data downloaded. Run option 1 first!")
-        else:
-            Intellidock_Test_Profitability(df)
-            
-    elif(option == 0):
-        print("Exiting")
-    if(option >= 1 and option <= 6):
-        option = -1
-'''#---------------------------------------------
 
 #Click Commands
 
@@ -748,5 +604,20 @@ def run(predict, testProfit):
 
     return
 
-if __name__ == "__main__":
-    run()
+#if __name__ == "__main__":
+#    run()
+#---------------------------------------------------
+#Debugging section - lets the code be run locally to check for bugs before pushing to git/VM
+
+'''
+barrels = 750000
+costPerDay = 30000
+
+df = Intellidock_Get_Data()
+
+os1,os2,os3,os4,os7,os8 = Intellidock_Test_Profitability(df, barrels, costPerDay)
+
+df,model,X_test,y_test = Intellidock_Train(df)
+os1,os2,os3,os4,os5,os6,os7,os8,os9 = Intellidock_Predict_Next_Day(df,model,X_test,y_test,barrels,costPerDay)
+'''
+
