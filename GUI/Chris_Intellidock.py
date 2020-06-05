@@ -54,8 +54,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-import dataFunctions as dataFun
-
 import commonFunctions.dataFunctions as dataFun
 import commonFunctions.Covid_19_Data_Scrapers as Covid
 
@@ -68,7 +66,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import confusion_matrix
 
 from sklearn.tree import DecisionTreeClassifier
-from IPython.display import Image, display
+#from IPython.display import Image, display
 from sklearn import tree
 
 from datetime import datetime as dt
@@ -87,7 +85,7 @@ from xgboost import plot_importance, plot_tree
 
 import click
 
-from tkinter import *
+#from tkinter import *
 
 ##--------------------------------------------------------------------
 #Start of Function Definitions112
@@ -496,6 +494,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     string5 = "Theoretical gaussian 90%CL:", df["Deviation"].mean(), "+-", 1.645*standard_deviation
     string6 = "Actual amount enclosed in this interval:", fraction_included
     string7 = "Empirical 90% Confidence Limit Range = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower, "relative to predicted price"
+
     string8 = "90% Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
     
     with open('CL_Limits.csv','w',newline = '') as file_CL_Limits:
