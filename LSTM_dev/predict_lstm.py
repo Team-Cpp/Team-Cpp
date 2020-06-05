@@ -965,7 +965,7 @@ def predict_new(weights, df, days=1):
         
     if days == 1:
         print("Price on {} was {:.3f}".format(date, data_for_pred["Prices"].iloc[-1]))
-        print("The price prediction for {} is {:.3f} dollhairs".format(date + add,pred_org[0][0])) #,pred_prob[0][0]
+        print("The price prediction for {} is {:.3f} USD".format(date + add,pred_org[0][0])) #,pred_prob[0][0]
     else:
         print(
             "The price predictions for the following {:.0f} days are {}".format(
