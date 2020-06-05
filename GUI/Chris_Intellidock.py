@@ -66,7 +66,7 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import confusion_matrix
 
 from sklearn.tree import DecisionTreeClassifier
-from IPython.display import Image, display
+#from IPython.display import Image, display
 from sklearn import tree
 
 from datetime import datetime as dt
@@ -85,7 +85,7 @@ from xgboost import plot_importance, plot_tree
 
 import click
 
-from tkinter import *
+#from tkinter import *
 
 ##--------------------------------------------------------------------
 #Start of Function Definitions112
