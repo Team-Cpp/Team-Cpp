@@ -12,7 +12,7 @@ from os import path
 import sys
 
 basepath = path.dirname(__file__)
-filepath = path.abspath(path.join(basepath, ".."))
+filepath = path.abspath(path.join(basepath, "."))
 print (filepath)
 try:
     sys.path.insert(1,os.environ['DF_ROOT'])
