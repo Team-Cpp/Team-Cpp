@@ -18,9 +18,9 @@ print (filepath)
 #     sys.path.insert(1,os.environ['DF_ROOT'])
 # except:
 sys.path.insert(0,filepath)
-sys.path.insert(1,filepath+"/commonFunctions")
-sys.path.insert(2,basepath+"/commonFunctions")
-sys.path.insert(3,filepath+"/GUI")
+sys.path.insert(1,path.join(filepath+"/commonFunctions"))
+sys.path.insert(2,path.join(basepath+"/commonFunctions"))
+sys.path.insert(3,path.join(filepath+"/GUI"))
 
 from Chris_Intellidock import Intellidock_Predict_Next_Day
 from Chris_Intellidock import Intellidock_Train
