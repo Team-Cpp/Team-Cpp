@@ -24,7 +24,7 @@ except:
     sys.path.insert(3,filepath+"/GUI")
     sys.path.insert(4,BDT_path)
     
-import Chris_Intellidock as BDT
+from GUI import Chris_Intellidock as BDT
 
 #from Chris_Intellidock import Intellidock_Predict_Next_Day
 #from Chris_Intellidock import Intellidock_Train
