@@ -12,5 +12,3 @@ install:
 script:
   - pytest Python_Testing_Scripts
 
-after_success:
-  - codecov
