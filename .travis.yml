@@ -10,7 +10,7 @@ install:
 # command to run tests
 
 script:
-  - pytest --cov=./ Python_Testing_Scripts
+  - pytest Python_Testing_Scripts
 
 after_success:
   - codecov
