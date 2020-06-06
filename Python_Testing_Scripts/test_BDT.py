@@ -13,8 +13,12 @@ import sys
 
 basepath = path.dirname(__file__)
 filepath = path.abspath(path.join(basepath, ".."))
-BDT_path = path.abspath(path.join(filepath,'GUI'))
+BDT_path = path.abspath(path.join(filepath,'GUI','Chris_Intellidock.py'))
 print (BDT_path)
+
+#os.symlink(path.join(basepath,'Chris_Intellidock.py'),BDT_path)
+
+
 try:
     sys.path.insert(1,os.environ['DF_ROOT'])
 except:
@@ -24,12 +28,11 @@ except:
     sys.path.insert(3,filepath+"/GUI")
     sys.path.insert(4,BDT_path)
     
-from GUI import Chris_Intellidock as BDT
 
-#from Chris_Intellidock import Intellidock_Predict_Next_Day
-#from Chris_Intellidock import Intellidock_Train
-#from Chris_Intellidock import Intellidock_Get_Data
-#from Chris_Intellidock import Intellidock_Test_Profitability
+from Chris_Intellidock import Intellidock_Predict_Next_Day
+from Chris_Intellidock import Intellidock_Train
+from Chris_Intellidock import Intellidock_Get_Data
+from Chris_Intellidock import Intellidock_Test_Profitability
 
 
 import pandas as pd
@@ -85,11 +88,11 @@ def test_BDT():
     barrels = 750000
     costPerDay = 30000
     df = build_mock_df()
-    df,model,x_test,y_test = BDT.Intellidock_Train(df)
+    df,model,x_test,y_test = Intellidock_Train(df)
     
     print(df)
     
-    os1,os2,os3,os4,os5,os6,os7,os8,os9 = BDT.Intellidock_Predict_Next_Day(df,model,x_test,y_test,barrels,costPerDay)
+    os1,os2,os3,os4,os5,os6,os7,os8,os9 = Intellidock_Predict_Next_Day(df,model,x_test,y_test,barrels,costPerDay)
     
     print (os1)
     
@@ -102,7 +105,7 @@ def test_BDT():
 #dataframe = test_BDT()
     
 def test_get_data():
-    df = BDT.Intellidock_Get_Data()
+    df = Intellidock_Get_Data()
     df_type_comp = pd.DataFrame([0,1,2])
     assert type(df) == type(df_type_comp)
     
