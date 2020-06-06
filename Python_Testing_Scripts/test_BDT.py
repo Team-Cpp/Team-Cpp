@@ -13,10 +13,10 @@ import sys
 
 basepath = path.dirname(__file__)
 filepath = path.abspath(path.join(basepath, ".."))
-BDT_path = path.abspath(path.join(filepath,'GUI','Chris_Intellidock.py'))
+BDT_path = path.abspath(path.join(filepath,'GUI'))
 print (BDT_path)
 
-#os.symlink(path.join(basepath,'Chris_Intellidock.py'),BDT_path)
+#os.symlink(BDT_path,'BDT_Link')
 
 
 try:
@@ -29,11 +29,15 @@ except:
     sys.path.insert(4,BDT_path)
     
 
-from Chris_Intellidock import Intellidock_Predict_Next_Day
-from Chris_Intellidock import Intellidock_Train
-from Chris_Intellidock import Intellidock_Get_Data
-from Chris_Intellidock import Intellidock_Test_Profitability
+#from Chris_Intellidock import Intellidock_Predict_Next_Day
+#from Chris_Intellidock import Intellidock_Train
+#from Chris_Intellidock import Intellidock_Get_Data
+#from Chris_Intellidock import Intellidock_Test_Profitability
 
+from BDT_Link.Chris_Intellidock import Intellidock_Predict_Next_Day
+from BDT_Link.Chris_Intellidock import Intellidock_Train
+from BDT_Link.Chris_Intellidock import Intellidock_Get_Data
+#from BDT_Link.Chris_Intellidock import Intellidock_Predict_Next_Day
 
 import pandas as pd
 from datetime import datetime as dt
