@@ -13,7 +13,8 @@ import sys
 
 basepath = path.dirname(__file__)
 filepath = path.abspath(path.join(basepath, ".."))
-print (filepath)
+BDT_path = path.abspath(path.join(filepath,'GUI'))
+print (BDT_path)
 try:
     sys.path.insert(1,os.environ['DF_ROOT'])
 except:
@@ -21,6 +22,7 @@ except:
     sys.path.insert(1,filepath+"/commonFunctions")
     sys.path.insert(2,basepath+"/commonFunctions")
     sys.path.insert(3,filepath+"/GUI")
+    sys.path.insert(4,BDT_path)
 
 from Chris_Intellidock import Intellidock_Predict_Next_Day
 from Chris_Intellidock import Intellidock_Train
