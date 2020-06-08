@@ -190,14 +190,23 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     print("Gain if Sold Tomorrow Minus Operating Costs:", barrels*WTI_Prediction_tomorrow-costPerDay)
     print("\n \n \n") 
     
-    string1 = "Price Today: ",df['Prices'][len(df.index)-1]
-    string2 = "Price Predicted Tomorrow: ",WTI_Prediction_tomorrow
-    string3 = "Anticipated price change:", WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1]
-    string4 = "Assumed Costs = ",costPerDay
-    string5 = "Barrels Contained on Ship: = ", barrels
-    string6 = "Gain if Sold Today:", barrels*df['Prices'][len(df.index)-1]
-    string7 = "Anticipated Gain Change (including operating costs): ", barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay
-    string8 = "Gain if Sold Tomorrow Minus Operating Costs:", barrels*WTI_Prediction_tomorrow-costPerDay
+    string1 = ' '.join(["Price Today: ",str(df['Prices'][len(df.index)-1])])
+    string2 = ' '.join(["Price Predicted Tomorrow: ",str(WTI_Prediction_tomorrow)])
+    string3 = ' '.join(["Anticipated price change:", str(WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])])
+    string4 = ' '.join(["Assumed Costs = ",str(costPerDay)])
+    string5 = ' '.join(["Barrels Contained on Ship: = ", str(barrels)])
+    string6 = ' '.join(["Gain if Sold Today:", str(barrels*df['Prices'][len(df.index)-1])])
+    string7 = ' '.join(["Anticipated Gain Change (including operating costs): ", str(barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay)])
+    string8 = ' '.join(["Gain if Sold Tomorrow Minus Operating Costs:", str(barrels*WTI_Prediction_tomorrow-costPerDay)])
+    
+    print(string1)
+    print(string2)
+    print(string3)
+    print(string4)
+    print(string5)
+    print(string6)
+    print(string7)
+    print(string8)
     
     
     return(output_string,string1,string2,string3,string4,string5,string6,string7,string8)
