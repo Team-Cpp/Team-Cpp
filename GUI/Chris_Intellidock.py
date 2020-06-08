@@ -582,21 +582,21 @@ def run(predict, testProfit):
     
             writer.writerow([os1])
     
-            writer.writerow(os2)
+            writer.writerow([os2])
     
-            writer.writerow(os3)
+            writer.writerow([os3])
     
-            writer.writerow(os4)
+            writer.writerow([os4])
     
-            writer.writerow(os5)
+            writer.writerow([os5])
     
-            writer.writerow(os6)
+            writer.writerow([os6])
     
-            writer.writerow(os7)
+            writer.writerow([os7])
     
-            writer.writerow(os8)
+            writer.writerow([os8])
     
-            writer.writerow(os9)
+            writer.writerow([os9])
             
             fig = Intellidock_Display_Feature_Importance(df,model,X_test,y_test)
             
@@ -610,15 +610,15 @@ def run(predict, testProfit):
     
             writer.writerow([os1])
     
-            writer.writerow(os2)
+            writer.writerow([os2])
     
-            writer.writerow(os3)
+            writer.writerow([os3])
     
-            writer.writerow(os4)
+            writer.writerow([os4])
     
-            writer.writerow(os7)
+            writer.writerow([os7])
     
-            writer.writerow(os8)
+            writer.writerow([os8])
 
     return
 
