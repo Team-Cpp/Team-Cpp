@@ -52,7 +52,7 @@ print(pd.__file__)
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
-
+import string
 
 import commonFunctions.dataFunctions as dataFun
 import commonFunctions.Covid_19_Data_Scrapers as Covid
@@ -203,7 +203,7 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     return(output_string,string1,string2,string3,string4,string5,string6,string7,string8)
 
 def Intellidock_Display_Feature_Importance(df,model,X_test, y_test):
-    fig, ax = plt.subplots(figsize=(9,10))
+    fig, ax = plt.subplots(figsize=(5,5))
     xgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
     plt.show()
     return fig
@@ -486,16 +486,16 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     print("Confidence range = ",Truth_CL_lower,"to", Truth_CL_upper)
     
     
-    string1 = "Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],"."
-    string2 = "Mean error as standard deviation from truth value: ", standard_deviation
-    string3 = "\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"
-    string4 = df["Relative Profit"].sum()/len(df.index)
+    string1 = ' '.join(["Testing complete, accuracy percentage = ",str(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds)),"using data from", str(df["Date"][0]), "to",str( df["Date"][len(df.index)-1]),"."])
+    string2 = ' '.join(["Mean error as standard deviation from truth value: ", str(standard_deviation)])
+    string3 = ' '.join(["\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"])
+    string4 = ' '.join([str(df["Relative Profit"].sum()/len(df.index))])
    
-    string5 = "Theoretical gaussian 90%CL:", df["Deviation"].mean(), "+-", 1.645*standard_deviation
-    string6 = "Actual amount enclosed in this interval:", fraction_included
-    string7 = "Empirical 90% Confidence Limit Range = ",df['Deviation'].mean(),"+",Truth_CL_upper, "-" , -Truth_CL_lower, "relative to predicted price"
+    string5 = ' '.join(["Theoretical gaussian 90%CL:", str(df["Deviation"].mean()), "+-", str(1.645*standard_deviation)])
+    string6 = ' '.join(["Actual amount enclosed in this interval:", str(fraction_included)])
+    string7 = ' '.join(["Empirical 90% Confidence Limit Range = ","+",str(Truth_CL_upper), "-" , str(-Truth_CL_lower), "relative to predicted price"])
 
-    string8 = "90% Confidence range = ",df['Deviation'].mean()+Truth_CL_lower,"to", df['Deviation'].mean()+Truth_CL_upper
+    string8 = ' '.join(["90% Confidence range = ", str(Truth_CL_lower),"to", str(Truth_CL_upper)])
     
     with open('CL_Limits.csv','w',newline = '') as file_CL_Limits:
             writer = csv.writer(file_CL_Limits)
@@ -504,11 +504,21 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
             
             writer.writerow([Truth_CL_upper])
     
+    print(string1)
+    print(string2)
+    print(string3)
+    print(string4)
+    print(string5)
+    print(string6)
+    print(string7)
+    print(string8)
 
     plt.figure()
 
     plt.hist(df['Deviation'],bins = 26)
-
+    plt.suptitle('Histogram of Deviation from the Truth Price')
+    plt.xlabel('Deviation (Dollars)')
+    plt.ylabel('Frequency')
     plt.savefig('Deviation_Histogram.png')
     plt.show()
 
@@ -603,8 +613,8 @@ def run(predict, testProfit):
 
     return
 
-#if __name__ == "__main__":
-#    run()
+if __name__ == "__main__":
+    run()
 #---------------------------------------------------
 #Debugging section - lets the code be run locally to check for bugs before pushing to git/VM
 
