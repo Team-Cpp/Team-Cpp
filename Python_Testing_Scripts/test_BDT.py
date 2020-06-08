@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Created on Wed May 27 13:20:13 2020
-
 @author: nj18237
 """
 
@@ -13,26 +12,19 @@ import sys
 
 basepath = path.dirname(__file__)
 filepath = path.abspath(path.join(basepath, "."))
-BDT_path = path.abspath(path.join(filepath,'GUI'))
-print (BDT_path)
-
-#os.symlink(BDT_path,'BDT_Link')
-
-
-try:
-    sys.path.insert(1,os.environ['DF_ROOT'])
-except:
-    sys.path.insert(0,filepath)
-    sys.path.insert(1,filepath+"/commonFunctions")
-    sys.path.insert(2,basepath+"/commonFunctions")
-    sys.path.insert(3,filepath+"/GUI")
-    sys.path.insert(4,BDT_path)
-    
+print (filepath)
+# try:
+# sys.path.insert(1,os.environ['DF_ROOT'])
+# # except:
+sys.path.insert(0,filepath)
+sys.path.insert(1,path.join(filepath+"/commonFunctions"))
+sys.path.insert(2,path.join(basepath+"/commonFunctions"))
+sys.path.insert(3,path.join(filepath+"/GUI"))
 
 from GUI.Chris_Intellidock import Intellidock_Predict_Next_Day
 from GUI.Chris_Intellidock import Intellidock_Train
 from GUI.Chris_Intellidock import Intellidock_Get_Data
-#from GUI.Chris_Intellidock import Intellidock_Test_Profitability
+from GUI.Chris_Intellidock import Intellidock_Test_Profitability
 
 
 import pandas as pd
