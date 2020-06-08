@@ -500,7 +500,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     plt.figure()
 
     plt.hist(df['Deviation'],bins = 26)
-    plt.suptitle('Histogram of Deviation from the Truth Price')
+    #plt.suptitle('Histogram of Deviation from the Truth Price')
     plt.xlabel('Deviation (Dollars)')
     plt.ylabel('Frequency')
     plt.savefig('Deviation_Histogram.png')
