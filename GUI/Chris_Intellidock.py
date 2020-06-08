@@ -5,30 +5,6 @@ Created on Thu Feb  6 13:08:49 2020
 @author: nj18237
 """
 
-###ToDo List: 
-#Impliment an "error" as a deviation from the mean value and hence a confidence limit
-#Done!
-
-#Run a test to see if it makes a profit/loss overall and see by how much
-#Done!
-
-#Display how much each parameter actually impacts the result
-#Partial...
-
-#Separate the training from the prediction
-#Done!
-
-#"Serverless"
-
-#Find a way to host the model stuff online somewhere
-#
-#
-#import os
-#import os.path
-#abspath = os.path.abspath(__file__)
-#dname = os.path.dirname(abspath)
-#os.chdir(dname)
-
 import os
 from os import path
 
@@ -52,6 +28,7 @@ print(pd.__file__)
 import requests
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import rcParams
 import string
 
 import commonFunctions.dataFunctions as dataFun
@@ -106,12 +83,10 @@ def create_features(df, label=None, shift = 0):
     df['Day of the month'] = df['Date'].dt.day
     df['Week of the year'] = df['Date'].dt.weekofyear
     df = df.set_index('Date')
-    #X = df[['Oil Production', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26', 'ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist','dayofyear','dayofmonth','weekofyear']]
-
+    
     X = df[['Oil Production', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26', 'ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference','Day of the year','Day of the month','Week of the year',"COVID-19 Cases (ECDC data)"]]
     if shift > 0:
         tiems = X[['Day of the year','Day of the month','Week of the year']]
-        #X = X[['Oil Production', 'NatGasPrices', 'BrentPrices', '20dSMA', 'Momentum_14', 'MACD_12_26', 'MACDdiff_12_26','ROC_14', 'RSI_14', 'bollAmplitude', 'distFromTopBoll', 'distFromLowBoll', '20d200dDist']].shift(shift)
         X = X[['Oil Production', '20 day Simple Moving Average', 'Momentum_14', 'Moving average convergence/divergence 12 26', 'Moving average convergence/divergence diff 12 26','ROC_14', 'RSI_14', 'Bollinger Amplitude', 'Distance from high Bollinger band', 'Distance from low Bollinger band', '20 and 200 day SMA difference',"COVID-19 Cases (ECDC data)"]].shift(shift)
         X = X.merge(tiems, how='inner', left_index=True, right_index=True)
 
@@ -190,14 +165,14 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     print("Gain if Sold Tomorrow Minus Operating Costs:", barrels*WTI_Prediction_tomorrow-costPerDay)
     print("\n \n \n") 
     
-    string1 = ' '.join(["Price Today: ",str(df['Prices'][len(df.index)-1])])
-    string2 = ' '.join(["Price Predicted Tomorrow: ",str(WTI_Prediction_tomorrow)])
-    string3 = ' '.join(["Anticipated price change:", str(WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])])
-    string4 = ' '.join(["Assumed Costs = ",str(costPerDay)])
-    string5 = ' '.join(["Barrels Contained on Ship: = ", str(barrels)])
-    string6 = ' '.join(["Gain if Sold Today:", str(barrels*df['Prices'][len(df.index)-1])])
-    string7 = ' '.join(["Anticipated Gain Change (including operating costs): ", str(barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay)])
-    string8 = ' '.join(["Gain if Sold Tomorrow Minus Operating Costs:", str(barrels*WTI_Prediction_tomorrow-costPerDay)])
+    string1 = ' '.join(["Price Today: "+str(df['Prices'][len(df.index)-1])])
+    string2 = ' '.join(["Price Predicted Tomorrow: "+str(WTI_Prediction_tomorrow)])
+    string3 = ' '.join(["Anticipated price change:"+ str(WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])])
+    string4 = ' '.join(["Assumed Costs = "+str(costPerDay)])
+    string5 = ' '.join(["Barrels Contained on Ship: = "+ str(barrels)])
+    string6 = ' '.join(["Gain if Sold Today:"+ str(barrels*df['Prices'][len(df.index)-1])])
+    string7 = ' '.join(["Anticipated Gain Change (including operating costs): "+ str(barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay)])
+    string8 = ' '.join(["Gain if Sold Tomorrow Minus Operating Costs:"+ str(barrels*WTI_Prediction_tomorrow-costPerDay)])
     
     print(string1)
     print(string2)
@@ -212,7 +187,7 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     return(output_string,string1,string2,string3,string4,string5,string6,string7,string8)
 
 def Intellidock_Display_Feature_Importance(df,model,X_test, y_test):
-    fig, ax = plt.subplots(figsize=(5,5))
+    fig, ax = plt.subplots(figsize=(15,10))
     xgb.plot_importance(model, max_num_features=50, height=0.8, ax=ax)
     plt.show()
     return fig
@@ -495,16 +470,16 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     print("Confidence range = ",Truth_CL_lower,"to", Truth_CL_upper)
     
     
-    string1 = ' '.join(["Testing complete, accuracy percentage = ",str(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds)),"using data from", str(df["Date"][0]), "to",str( df["Date"][len(df.index)-1]),"."])
-    string2 = ' '.join(["Mean error as standard deviation from truth value: ", str(standard_deviation)])
+    string1 = ' '.join(["Testing complete, accuracy percentage = "+str(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds))+"using data from"+ str(df["Date"][0])+ "to",str( df["Date"][len(df.index)-1])+"."])
+    string2 = ' '.join(["Mean error as standard deviation from truth value: "+ str(standard_deviation)])
     string3 = ' '.join(["\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"])
     string4 = ' '.join([str(df["Relative Profit"].sum()/len(df.index))])
    
-    string5 = ' '.join(["Theoretical gaussian 90%CL:", str(df["Deviation"].mean()), "+-", str(1.645*standard_deviation)])
-    string6 = ' '.join(["Actual amount enclosed in this interval:", str(fraction_included)])
-    string7 = ' '.join(["Empirical 90% Confidence Limit Range = ","+",str(Truth_CL_upper), "-" , str(-Truth_CL_lower), "relative to predicted price"])
+    string5 = ' '.join(["Theoretical gaussian 90%CL:"+ str(df["Deviation"].mean())+ "+-"+ str(1.645*standard_deviation)])
+    string6 = ' '.join(["Actual amount enclosed in this interval:"+ str(fraction_included)])
+    string7 = ' '.join(["Empirical 90% Confidence Limit Range = "+"+"+str(Truth_CL_upper)+ "-" + str(-Truth_CL_lower)+ "relative to predicted price"])
 
-    string8 = ' '.join(["90% Confidence range = ", str(Truth_CL_lower),"to", str(Truth_CL_upper)])
+    string8 = ' '.join(["90% Confidence range = "+ str(Truth_CL_lower)+"to"+ str(Truth_CL_upper)])
     
     with open('CL_Limits.csv','w',newline = '') as file_CL_Limits:
             writer = csv.writer(file_CL_Limits)
@@ -568,6 +543,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
 @click.option("--testProfit/--no-testProfit", "testProfit", help="Test profitability of using the model from 01/01/2018", default=False)
 
 def run(predict, testProfit):
+    rcParams.update({'figure.autolayout':True})
     barrels = 750000
     costPerDay = 30000
     days = 1
@@ -600,7 +576,7 @@ def run(predict, testProfit):
             
             fig = Intellidock_Display_Feature_Importance(df,model,X_test,y_test)
             
-            fig.savefig('Feature_Importance.png')
+            fig.savefig('Feature_Importance.png',bbox_inces='tight')
         
     if testProfit is True:
         os1,os2,os3,os4,os7,os8 = Intellidock_Test_Profitability(df, barrels, costPerDay)
