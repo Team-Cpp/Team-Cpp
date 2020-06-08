@@ -645,7 +645,7 @@ def plot2axis(
     # fig.title(title, size = 36)
     fig.tight_layout()
 
-    cols = df.columns
+    # cols = df.columns
 
 
 def plot_data(df, variables=train_cols, days=60):
@@ -1081,7 +1081,7 @@ def getLstmData():
     df = df.sort_values(by="Date")
     df = df[df["Date"] > trainDataDate]
     df = df.reset_index().drop(["index"], axis=1)
-    colls = ["Date"] + train_cols
+    colls = ["Date", "boll_hi", "boll_lo", "20dSMA"] + train_cols
     df_fin = df[colls]
     df_fin["Nasdaq"].iloc[-1] = df_fin["Nasdaq"].iloc[-2]
     print("Saving dataframe to file ", dataFileName, "at ", INPUT_PATH)
