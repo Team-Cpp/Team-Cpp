@@ -4,7 +4,8 @@
 Created on Thu Feb  6 13:08:49 2020
 @author: nj18237
 """
-
+import warnings
+warnings.filterwarnings("ignore")
 import os
 from os import path
 
@@ -156,23 +157,23 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
     
     print("Details:")
     print("Price Today: {:.2f}".format(df['Prices'][len(df.index)-1]))
-    print("Price Predicted Tomorrow: {:.2f}".format(WTI_Prediction_tomorrow),'(90% Confidence Interval of',WTI_Prediction_tomorrow + CL_Low,'to',WTI_Prediction_tomorrow + CL_High,')')
-    print("Anticipated price change:", WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])
-    print("Assumed Costs = ",costPerDay)
-    print("Barrels Contained on Ship: = ", barrels)
-    print("Gain if Sold Today:", barrels*df['Prices'][len(df.index)-1])
-    print("Anticipated Gain Change (including operating costs): ", barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay)
-    print("Gain if Sold Tomorrow Minus Operating Costs:", barrels*WTI_Prediction_tomorrow-costPerDay)
+    print("Price Predicted Tomorrow: {:.2f} (90% Confidence Interval of {:.2f} to {:.2f})".format(WTI_Prediction_tomorrow, WTI_Prediction_tomorrow + CL_Low,WTI_Prediction_tomorrow + CL_High))
+    print("Anticipated price change: {:.2f}".format(WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1]))
+    print("Assumed Costs = {:.2f}".format(costPerDay))
+    print("Barrels Contained on Ship: = {:.0f}".format(barrels))
+    print("Gain if Sold Today: {:.2f}".format(barrels*df['Prices'][len(df.index)-1]))
+    print("Anticipated Gain Change (including operating costs): {:.2f}".format(barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay))
+    print("Gain if Sold Tomorrow Minus Operating Costs: {:.2f}".format(barrels*WTI_Prediction_tomorrow-costPerDay))
     print("\n \n \n") 
     
-    string1 = ' '.join(["Price Today: "+str(df['Prices'][len(df.index)-1])])
-    string2 = ' '.join(["Price Predicted Tomorrow: "+str(WTI_Prediction_tomorrow)])
-    string3 = ' '.join(["Anticipated price change:"+ str(WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])])
-    string4 = ' '.join(["Assumed Costs = "+str(costPerDay)])
-    string5 = ' '.join(["Barrels Contained on Ship: = "+ str(barrels)])
-    string6 = ' '.join(["Gain if Sold Today:"+ str(barrels*df['Prices'][len(df.index)-1])])
-    string7 = ' '.join(["Anticipated Gain Change (including operating costs): "+ str(barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay)])
-    string8 = ' '.join(["Gain if Sold Tomorrow Minus Operating Costs:"+ str(barrels*WTI_Prediction_tomorrow-costPerDay)])
+    string1 = ' '.join(["Price Today: {:.2f}".format(df['Prices'][len(df.index)-1])])
+    string2 = ' '.join(["Price Predicted Tomorrow: {:.2f}".format(WTI_Prediction_tomorrow)])
+    string3 = ' '.join(["Anticipated price change: {:.2f}".format(WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])])
+    string4 = ' '.join(["Assumed Costs = {:.2f}".format(costPerDay)])
+    string5 = ' '.join(["Barrels Contained on Ship: = {:.2f}".format(barrels)])
+    string6 = ' '.join(["Gain if Sold Today: {:.2f}".format(barrels*df['Prices'][len(df.index)-1])])
+    string7 = ' '.join(["Anticipated Gain Change (including operating costs): {:.2f}".format(barrels*(WTI_Prediction_tomorrow-df['Prices'][len(df.index)-1])-costPerDay)])
+    string8 = ' '.join(["Gain if Sold Tomorrow Minus Operating Costs: {:.2f}".format(barrels*WTI_Prediction_tomorrow-costPerDay)])
     
     print(string1)
     print(string2)
@@ -420,14 +421,14 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
         df["Deviation"][i] = (df['WTI_Prediction_iterative'][i]-df['Prices'][i])
         sum_of_squares += (df["Deviation"][i])**2
                   
-    print ("Testing complete, accuracy percentage = ",df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds),"using data from", df["Date"][0], "to", df["Date"][len(df.index)-1],".")
+    print ("Testing complete, accuracy percentage = {:.1%} using data from {} to {}".format(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds), df["Date"][0], df["Date"][len(df.index)-1]))
     
     standard_deviation = (sum_of_squares/n - df["Deviation"].mean()**2)**0.5
     
-    print("Mean error as standard deviation from truth value: ", standard_deviation)
+    print("Mean error as standard deviation from truth value: {:.3f}".format(standard_deviation))
     
     print("\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:")
-    print (df["Relative Profit"].sum()/len(df.index))
+    print ("{:.2f}".format(df["Relative Profit"].sum()/len(df.index)))
     
     fraction_included = 0.0
     Truth_CL_upper = 0.0
@@ -442,9 +443,9 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     fraction_included = Number_enclosed/len(df.index)
         
     
-    print("Theoretical 90%CL:", df["Deviation"].mean()," +-", 1.645*standard_deviation)
+    print("Theoretical 90%CL: {:.1%} +/- {:.1%}".format(df["Deviation"].mean(), 1.645*standard_deviation))
     
-    print("Actual amount enclosed in this interval:", fraction_included)
+    print("Actual amount enclosed in this interval: {:.2f}".format(fraction_included))
     
     median_deviation = df['Deviation'].sort_values().median()
     Truth_CL_upper = 0.0
@@ -461,7 +462,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
             
         Number_enclosed = 0
         
-        print(median_deviation,"upper_CL = ",Truth_CL_upper, " Fraction enclosed =", Fraction_enclosed,"number enclosed =", Number_enclosed)
+        print("{:.2f}, upper_CL = {:.2f}, fraction enclosed = {:.2f}, number enclosed = {:.2f}".format(median_deviation, Truth_CL_upper, Fraction_enclosed, Number_enclosed))
         if Truth_CL_upper>40:
             break
     
@@ -479,7 +480,7 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
             
         Number_enclosed = 0
         
-        print("lower_CL = ",Truth_CL_lower, " Fraction enclosed =", Fraction_enclosed, "number enclosed =", Number_enclosed)
+        print("lower_CL = {:.2f},  {:.2f},  {:.2f}".format(Truth_CL_lower, Fraction_enclosed, Number_enclosed))
        
     Truth_CL_lower = median_deviation + Truth_CL_lower
         
@@ -487,19 +488,19 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     
     
     #print("CL = ",0,"+",Truth_CL_upper, "-" , Truth_CL_lower)
-    print("Confidence range = ",Truth_CL_lower,"to", Truth_CL_upper)
+    print("Confidence range = {:.2f} to {:.2f}".format(Truth_CL_lower, Truth_CL_upper))
     
     
-    string1 = ' '.join(["Testing complete, accuracy percentage = "+str(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds))+" using data from"+ str(df["Date"][0])+ "to",str( df["Date"][len(df.index)-1])+"."])
-    string2 = ' '.join(["Mean error as standard deviation from truth value: "+ str(standard_deviation)])
+    string1 = ' '.join(["Testing complete, accuracy percentage = {:.2f} using data from {} to {}.".format(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds), (df["Date"][0]), df["Date"][len(df.index)-1])])
+    string2 = ' '.join(["Mean error as standard deviation from truth value: {:.2f}".format(standard_deviation)])
     string3 = ' '.join(["\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"])
-    string4 = ' '.join([str(df["Relative Profit"].sum()/len(df.index))])
+    string4 = ' '.join(["{:.2f}".format(df["Relative Profit"].sum()/len(df.index))])
    
-    string5 = ' '.join(["Theoretical gaussian 90%CL: "+ str(df["Deviation"].mean())+ "+-"+ str(1.645*standard_deviation)])
-    string6 = ' '.join(["Actual amount enclosed in this interval: "+ str(fraction_included)])
-    string7 = ' '.join(["Empirical 90% Confidence Limit Range = "+" + "+str(Truth_CL_upper)+ " - " + str(-Truth_CL_lower)+ " relative to predicted price"])
+    string5 = ' '.join(["Theoretical gaussian 90%CL: {:.2f} +/- {:.2f}".format(df["Deviation"].mean(), 1.645*standard_deviation)])
+    string6 = ' '.join(["Actual amount enclosed in this interval: {:.2f}".format(fraction_included)])
+    string7 = ' '.join(["Empirical 90% Confidence Limit Range = + {:.2f} - {:.2f} relative to predicted price".format(Truth_CL_upper, -Truth_CL_lower)])
 
-    string8 = ' '.join(["90% Confidence range = "+ str(Truth_CL_lower)+" to "+ str(Truth_CL_upper)])
+    string8 = ' '.join(["90% Confidence range = {:.2f} to {:.2f}".format(Truth_CL_lower, Truth_CL_upper)])
     
     with open('CL_Limits.csv','w',newline = '') as file_CL_Limits:
             writer = csv.writer(file_CL_Limits)
