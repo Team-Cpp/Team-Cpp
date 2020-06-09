@@ -430,56 +430,76 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
     print (df["Relative Profit"].sum()/len(df.index))
     
     fraction_included = 0.0
+    Truth_CL_upper = 0.0
+    Truth_CL_lower = 0.0
+    Fraction_enclosed = 0.0
+    Number_enclosed = 0
+    
     
     for i in range(0,len(df.index)):
         if df['Deviation'][i]<1.645*standard_deviation and df['Deviation'][i]>-1.645*standard_deviation:
-            fraction_included += 1
-    fraction_included = fraction_included/len(df.index)
+            Number_enclosed += 1
+    fraction_included = Number_enclosed/len(df.index)
         
     
     print("Theoretical 90%CL:", df["Deviation"].mean()," +-", 1.645*standard_deviation)
     
     print("Actual amount enclosed in this interval:", fraction_included)
     
+    median_deviation = df['Deviation'].sort_values().median()
     Truth_CL_upper = 0.0
     Truth_CL_lower = 0.0
     Fraction_enclosed = 0.0
     Number_enclosed = 0
-    
+   
     while Fraction_enclosed <0.45:
-        Truth_CL_upper += 0.001
+        Truth_CL_upper += 0.1
         for i in range(preset_early_stopping_rounds,len(df.index)):
-            if df['Deviation'][i]>0 and df['Deviation'][i]<Truth_CL_upper:
-                Number_enclosed +=1
-            Fraction_enclosed = Number_enclosed/len(df.index)
-        print("upper_CL = ",Truth_CL_upper, " Fraction enclosed =", Fraction_enclosed,"number enclosed =", Number_enclosed)
+            if df['Deviation'][i]>=median_deviation and df['Deviation'][i] < median_deviation + Truth_CL_upper:
+                Number_enclosed += 1
+            Fraction_enclosed = Number_enclosed/(len(df.index)-preset_early_stopping_rounds)
+            
+        Number_enclosed = 0
+        
+        print(median_deviation,"upper_CL = ",Truth_CL_upper, " Fraction enclosed =", Fraction_enclosed,"number enclosed =", Number_enclosed)
+        if Truth_CL_upper>40:
+            break
     
-    
+    ll = 0.45+(0.45-Fraction_enclosed)
     Fraction_enclosed = 0.0
     Number_enclosed = 0.0
     
-    while Fraction_enclosed <0.45:
-        Truth_CL_lower -= 0.01
-        for i in range(preset_early_stopping_rounds,len(df.index)):
-            if df['Deviation'][i]<0 and df['Deviation'][i] > Truth_CL_lower:
-                Number_enclosed +=1
-            Fraction_enclosed = Number_enclosed/len(df.index)
-        print("lower_CL = ",Truth_CL_lower, " Fraction enclosed =", Fraction_enclosed, "number enclosed =", Number_enclosed)
     
-    print("CL = ",0,"+",Truth_CL_upper, "-" , Truth_CL_lower)
+    while Fraction_enclosed <ll:
+        Truth_CL_lower -= 0.1
+        for i in range(preset_early_stopping_rounds,len(df.index)):
+            if df['Deviation'][i]<median_deviation and df['Deviation'][i] > median_deviation + Truth_CL_lower:
+                Number_enclosed +=1
+            Fraction_enclosed = Number_enclosed/(len(df.index)-preset_early_stopping_rounds)
+            
+        Number_enclosed = 0
+        
+        print("lower_CL = ",Truth_CL_lower, " Fraction enclosed =", Fraction_enclosed, "number enclosed =", Number_enclosed)
+       
+    Truth_CL_lower = median_deviation + Truth_CL_lower
+        
+    Truth_CL_upper = median_deviation + Truth_CL_upper
+    
+    
+    #print("CL = ",0,"+",Truth_CL_upper, "-" , Truth_CL_lower)
     print("Confidence range = ",Truth_CL_lower,"to", Truth_CL_upper)
     
     
-    string1 = ' '.join(["Testing complete, accuracy percentage = "+str(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds))+"using data from"+ str(df["Date"][0])+ "to",str( df["Date"][len(df.index)-1])+"."])
+    string1 = ' '.join(["Testing complete, accuracy percentage = "+str(df['Correct Prediction?'].sum()/(len(df.index)-preset_early_stopping_rounds))+" using data from"+ str(df["Date"][0])+ "to",str( df["Date"][len(df.index)-1])+"."])
     string2 = ' '.join(["Mean error as standard deviation from truth value: "+ str(standard_deviation)])
     string3 = ' '.join(["\n\n Profitability testing completed, estimated profit PER DAY relative to immediate sale:"])
     string4 = ' '.join([str(df["Relative Profit"].sum()/len(df.index))])
    
-    string5 = ' '.join(["Theoretical gaussian 90%CL:"+ str(df["Deviation"].mean())+ "+-"+ str(1.645*standard_deviation)])
-    string6 = ' '.join(["Actual amount enclosed in this interval:"+ str(fraction_included)])
-    string7 = ' '.join(["Empirical 90% Confidence Limit Range = "+"+"+str(Truth_CL_upper)+ "-" + str(-Truth_CL_lower)+ "relative to predicted price"])
+    string5 = ' '.join(["Theoretical gaussian 90%CL: "+ str(df["Deviation"].mean())+ "+-"+ str(1.645*standard_deviation)])
+    string6 = ' '.join(["Actual amount enclosed in this interval: "+ str(fraction_included)])
+    string7 = ' '.join(["Empirical 90% Confidence Limit Range = "+" + "+str(Truth_CL_upper)+ " - " + str(-Truth_CL_lower)+ " relative to predicted price"])
 
-    string8 = ' '.join(["90% Confidence range = "+ str(Truth_CL_lower)+"to"+ str(Truth_CL_upper)])
+    string8 = ' '.join(["90% Confidence range = "+ str(Truth_CL_lower)+" to "+ str(Truth_CL_upper)])
     
     with open('CL_Limits.csv','w',newline = '') as file_CL_Limits:
             writer = csv.writer(file_CL_Limits)
@@ -499,8 +519,9 @@ def Intellidock_Test_Profitability(df,barrels,costPerDay):
 
     plt.figure()
 
-    plt.hist(df['Deviation'],bins = 26)
+    plt.hist(df['Deviation'],bins = 100, range = [-25,25])
     #plt.suptitle('Histogram of Deviation from the Truth Price')
+    plt.axvspan(Truth_CL_lower,Truth_CL_upper,alpha = 0.5,color='yellow')
     plt.xlabel('Deviation (Dollars)')
     plt.ylabel('Frequency')
     plt.savefig('Deviation_Histogram.png')
