@@ -155,8 +155,8 @@ def Intellidock_Predict_Next_Day(df,model,X_test, y_test,barrels,costPerDay):
             
     
     print("Details:")
-    print("Price Today: ",df['Prices'][len(df.index)-1])
-    print("Price Predicted Tomorrow: ",WTI_Prediction_tomorrow,'(90% Confidence Interval of',WTI_Prediction_tomorrow + CL_Low,'to',WTI_Prediction_tomorrow + CL_High,')')
+    print("Price Today: {:.2f}".format(df['Prices'][len(df.index)-1]))
+    print("Price Predicted Tomorrow: {:.2f}".format(WTI_Prediction_tomorrow),'(90% Confidence Interval of',WTI_Prediction_tomorrow + CL_Low,'to',WTI_Prediction_tomorrow + CL_High,')')
     print("Anticipated price change:", WTI_Prediction_tomorrow - df['Prices'][len(df.index)-1])
     print("Assumed Costs = ",costPerDay)
     print("Barrels Contained on Ship: = ", barrels)
